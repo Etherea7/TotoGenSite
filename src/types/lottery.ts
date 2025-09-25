@@ -2,43 +2,43 @@
 
 export interface LotteryDraw {
   id?: number;
-  draw_number: number;
-  date: string;
-  winning_number_1: number;
-  winning_number_2: number;
-  winning_number_3: number;
-  winning_number_4: number;
-  winning_number_5: number;
-  winning_number_6: number;
-  additional_number: number;
+  "Draw"?: number;
+  "Date"?: string;
+  "Winning Number 1"?: number;
+  "2"?: number;
+  "3"?: number;
+  "4"?: number;
+  "5"?: number;
+  "6"?: number;
+  "Additional Number"?: number;
 
   // Statistical fields
-  from_last?: string;
-  low_numbers?: number;
-  high_numbers?: number;
-  odd_numbers?: number;
-  even_numbers?: number;
-  range_1_10?: number;
-  range_11_20?: number;
-  range_21_30?: number;
-  range_31_40?: number;
-  range_41_50?: number;
+  "From Last"?: string;
+  "Low"?: number;
+  "High"?: number;
+  "Odd"?: number;
+  "Even"?: number;
+  "1-10"?: number;
+  "11-20"?: number;
+  "21-30"?: number;
+  "31-40"?: number;
+  "41-50"?: number;
 
   // Prize information
-  division_1_winners?: number;
-  division_1_prize?: number;
-  division_2_winners?: number;
-  division_2_prize?: number;
-  division_3_winners?: number;
-  division_3_prize?: number;
-  division_4_winners?: number;
-  division_4_prize?: number;
-  division_5_winners?: number;
-  division_5_prize?: number;
-  division_6_winners?: number;
-  division_6_prize?: number;
-  division_7_winners?: number;
-  division_7_prize?: number;
+  "Division 1 Winners"?: number;
+  "Division 1 Prize"?: number;
+  "Division 2 Winners"?: number;
+  "Division 2 Prize"?: number;
+  "Division 3 Winners"?: number;
+  "Division 3 Prize"?: number;
+  "Division 4 Winners"?: number;
+  "Division 4 Prize"?: number;
+  "Division 5 Winners"?: number;
+  "Division 5 Prize"?: number;
+  "Division 6 Winners"?: number;
+  "Division 6 Prize"?: number;
+  "Division 7 Winners"?: number;
+  "Division 7 Prize"?: number;
 
   created_at?: string;
   updated_at?: string;

@@ -1,5 +1,5 @@
 import puppeteer, { Browser, Page } from 'puppeteer'
-import { LotteryDraw, CSVRow } from '@/types/lottery'
+import { LotteryDraw} from '@/types/lottery'
 import { parseInteger, parsePrize } from '@/lib/utils'
 
 export interface ScrapingResult {
@@ -114,28 +114,28 @@ export class TotoScraper {
             if (numbers.length !== 6) continue // Skip invalid combinations
 
             const rowData = {
-              draw_number: parseInt(drawNumber),
-              date: date,
-              winning_number_1: parseInt(numbers[0]),
-              winning_number_2: parseInt(numbers[1]),
-              winning_number_3: parseInt(numbers[2]),
-              winning_number_4: parseInt(numbers[3]),
-              winning_number_5: parseInt(numbers[4]),
-              winning_number_6: parseInt(numbers[5]),
-              additional_number: parseInt(additionalNumber),
+              "Draw": parseInt(drawNumber),
+              "Date": date,
+              "Winning Number 1": parseInt(numbers[0]),
+              "2": parseInt(numbers[1]),
+              "3": parseInt(numbers[2]),
+              "4": parseInt(numbers[3]),
+              "5": parseInt(numbers[4]),
+              "6": parseInt(numbers[5]),
+              "Additional Number": parseInt(additionalNumber),
             }
 
             // Validate the data
             if (
-              !isNaN(rowData.draw_number) &&
-              rowData.date &&
-              !isNaN(rowData.winning_number_1) &&
-              !isNaN(rowData.winning_number_2) &&
-              !isNaN(rowData.winning_number_3) &&
-              !isNaN(rowData.winning_number_4) &&
-              !isNaN(rowData.winning_number_5) &&
-              !isNaN(rowData.winning_number_6) &&
-              !isNaN(rowData.additional_number)
+              !isNaN(rowData["Draw"]) &&
+              rowData["Date"] &&
+              !isNaN(rowData["Winning Number 1"]) &&
+              !isNaN(rowData["2"]) &&
+              !isNaN(rowData["3"]) &&
+              !isNaN(rowData["4"]) &&
+              !isNaN(rowData["5"]) &&
+              !isNaN(rowData["6"]) &&
+              !isNaN(rowData["Additional Number"])
             ) {
               rows.push(rowData)
             }
@@ -152,19 +152,19 @@ export class TotoScraper {
 
       // Convert to LotteryDraw format
       const draws: LotteryDraw[] = tableData.map(row => ({
-        draw_number: row.draw_number,
-        date: row.date,
-        winning_number_1: row.winning_number_1,
-        winning_number_2: row.winning_number_2,
-        winning_number_3: row.winning_number_3,
-        winning_number_4: row.winning_number_4,
-        winning_number_5: row.winning_number_5,
-        winning_number_6: row.winning_number_6,
-        additional_number: row.additional_number,
+        "Draw": row["Draw"],
+        "Date": row["Date"],
+        "Winning Number 1": row["Winning Number 1"],
+        "2": row["2"],
+        "3": row["3"],
+        "4": row["4"],
+        "5": row["5"],
+        "6": row["6"],
+        "Additional Number": row["Additional Number"],
       }))
 
       const processingTime = Date.now() - startTime
-      const latestDraw = Math.max(...draws.map(d => d.draw_number), 0)
+      const latestDraw = Math.max(...draws.map(d => d["Draw"] || 0), 0)
 
       return {
         success: true,
@@ -212,52 +212,52 @@ export class TotoScraper {
         if (values.length < headers.length) continue
 
         const draw: LotteryDraw = {
-          draw_number: parseInteger(values[0]),
-          date: values[1],
-          winning_number_1: parseInteger(values[2]),
-          winning_number_2: parseInteger(values[3]),
-          winning_number_3: parseInteger(values[4]),
-          winning_number_4: parseInteger(values[5]),
-          winning_number_5: parseInteger(values[6]),
-          winning_number_6: parseInteger(values[7]),
-          additional_number: parseInteger(values[8]),
+          "Draw": parseInteger(values[0]),
+          "Date": values[1],
+          "Winning Number 1": parseInteger(values[2]),
+          "2": parseInteger(values[3]),
+          "3": parseInteger(values[4]),
+          "4": parseInteger(values[5]),
+          "5": parseInteger(values[6]),
+          "6": parseInteger(values[7]),
+          "Additional Number": parseInteger(values[8]),
 
           // Additional fields if present
-          from_last: values[9] || undefined,
-          low_numbers: parseInteger(values[10]),
-          high_numbers: parseInteger(values[11]),
-          odd_numbers: parseInteger(values[12]),
-          even_numbers: parseInteger(values[13]),
-          range_1_10: parseInteger(values[14]),
-          range_11_20: parseInteger(values[15]),
-          range_21_30: parseInteger(values[16]),
-          range_31_40: parseInteger(values[17]),
-          range_41_50: parseInteger(values[18]),
+          "From Last": values[9] || undefined,
+          "Low": parseInteger(values[10]),
+          "High": parseInteger(values[11]),
+          "Odd": parseInteger(values[12]),
+          "Even": parseInteger(values[13]),
+          "1-10": parseInteger(values[14]),
+          "11-20": parseInteger(values[15]),
+          "21-30": parseInteger(values[16]),
+          "31-40": parseInteger(values[17]),
+          "41-50": parseInteger(values[18]),
 
           // Prize information
-          division_1_winners: parseInteger(values[19]),
-          division_1_prize: parsePrize(values[20]),
-          division_2_winners: parseInteger(values[21]),
-          division_2_prize: parsePrize(values[22]),
-          division_3_winners: parseInteger(values[23]),
-          division_3_prize: parsePrize(values[24]),
-          division_4_winners: parseInteger(values[25]),
-          division_4_prize: parsePrize(values[26]),
-          division_5_winners: parseInteger(values[27]),
-          division_5_prize: parsePrize(values[28]),
-          division_6_winners: parseInteger(values[29]),
-          division_6_prize: parsePrize(values[30]),
-          division_7_winners: parseInteger(values[31]),
-          division_7_prize: parsePrize(values[32]),
+          "Division 1 Winners": parseInteger(values[19]),
+          "Division 1 Prize": parsePrize(values[20]),
+          "Division 2 Winners": parseInteger(values[21]),
+          "Division 2 Prize": parsePrize(values[22]),
+          "Division 3 Winners": parseInteger(values[23]),
+          "Division 3 Prize": parsePrize(values[24]),
+          "Division 4 Winners": parseInteger(values[25]),
+          "Division 4 Prize": parsePrize(values[26]),
+          "Division 5 Winners": parseInteger(values[27]),
+          "Division 5 Prize": parsePrize(values[28]),
+          "Division 6 Winners": parseInteger(values[29]),
+          "Division 6 Prize": parsePrize(values[30]),
+          "Division 7 Winners": parseInteger(values[31]),
+          "Division 7 Prize": parsePrize(values[32]),
         }
 
         // Validate essential fields
         if (
-          draw.draw_number > 0 &&
-          draw.date &&
-          draw.winning_number_1 > 0 &&
-          draw.winning_number_6 > 0 &&
-          draw.additional_number > 0
+          (draw["Draw"] || 0) > 0 &&
+          draw["Date"] &&
+          (draw["Winning Number 1"] || 0) > 0 &&
+          (draw["6"] || 0) > 0 &&
+          (draw["Additional Number"] || 0) > 0
         ) {
           draws.push(draw)
         }

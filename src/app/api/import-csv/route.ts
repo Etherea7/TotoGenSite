@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     // Get existing latest draw to avoid duplicates
     const latestDraw = await lotteryDb.getLatestDrawNumber()
-    const newDraws = draws.filter(draw => draw.draw_number > latestDraw)
+    const newDraws = draws.filter(draw => (draw["Draw"] || 0) > latestDraw)
 
     console.log(`Found ${newDraws.length} new draws to import (latest in DB: ${latestDraw})`)
 
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Sort by draw number
-    newDraws.sort((a, b) => a.draw_number - b.draw_number)
+    newDraws.sort((a, b) => (a["Draw"] || 0) - (b["Draw"] || 0))
 
     // Insert new draws in batches
     const BATCH_SIZE = 50
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         totalInserted += insertedDraws.length
         console.log(`Inserted batch ${Math.floor(i/BATCH_SIZE) + 1}: ${insertedDraws.length} draws`)
       } catch (error) {
-        const errorMsg = `Failed to insert batch starting at draw ${batch[0].draw_number}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        const errorMsg = `Failed to insert batch starting at draw ${batch[0]["Draw"]}: ${error instanceof Error ? error.message : 'Unknown error'}`
         errors.push(errorMsg)
         console.error(errorMsg)
       }

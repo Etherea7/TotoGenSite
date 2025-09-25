@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { totoScraper } from '@/lib/scraper'
+import { simpleTotoScraper } from '@/lib/simple-scraper'
 import { lotteryDb } from '@/lib/supabase'
 import { ScrapeResponse } from '@/types/lottery'
 
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     console.log(`Current latest draw in DB: ${currentLatestDraw}`)
 
     // Scrape data from website
-    const scrapingResult = await totoScraper.scrapeLotteryData()
+    const scrapingResult = await simpleTotoScraper.scrapeLotteryData()
 
     if (!scrapingResult.success) {
       console.error('Scraping failed:', scrapingResult.error)
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Filter out draws that already exist in the database
-    const newDraws = scrapingResult.draws.filter(draw => draw.draw_number > currentLatestDraw)
+    const newDraws = scrapingResult.draws.filter(draw => (draw["Draw"] || 0) > currentLatestDraw)
     console.log(`Found ${newDraws.length} new draws to insert`)
 
     let insertedCount = 0
@@ -41,12 +41,12 @@ export async function POST(request: NextRequest) {
     if (newDraws.length > 0) {
       try {
         // Sort by draw number to insert in order
-        newDraws.sort((a, b) => a.draw_number - b.draw_number)
+        newDraws.sort((a, b) => (a["Draw"] || 0) - (b["Draw"] || 0))
 
         // Insert new draws
         const insertedDraws = await lotteryDb.insertDraws(newDraws)
         insertedCount = insertedDraws.length
-        latestDrawNumber = Math.max(...newDraws.map(d => d.draw_number), currentLatestDraw)
+        latestDrawNumber = Math.max(...newDraws.map(d => d["Draw"] || 0), currentLatestDraw)
 
         console.log(`Successfully inserted ${insertedCount} new draws`)
 

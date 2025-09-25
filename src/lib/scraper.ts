@@ -19,7 +19,7 @@ export class TotoScraper {
   private readonly timeout: number
 
   constructor() {
-    this.targetUrl = process.env.SCRAPING_TARGET_URL || 'https://en.lottolyzer.com/history/singapore/toto'
+    this.targetUrl = process.env.SCRAPING_TARGET_URL || 'https://en.lottolyzer.com/history/singapore/toto/page/1/per-page/50/summary-view'
     this.userAgent = process.env.SCRAPING_USER_AGENT || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     this.timeout = parseInt(process.env.SCRAPING_TIMEOUT || '30000', 10)
   }
@@ -40,7 +40,15 @@ export class TotoScraper {
         '--no-zygote',
         '--single-process',
         '--disable-gpu',
-      ]
+        '--disable-web-security',
+        '--disable-extensions',
+        '--disable-plugins',
+        '--disable-images',
+        '--disable-javascript',
+        '--virtual-time-budget=30000'
+      ],
+      timeout: 60000,
+      protocolTimeout: 60000,
     })
 
     return this.browser

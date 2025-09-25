@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { lotteryDb } from '@/lib/supabase'
 import { totoScraper } from '@/lib/scraper'
-import { LotteryDraw } from '@/types/lottery'
 
 export async function POST(request: NextRequest) {
   try {

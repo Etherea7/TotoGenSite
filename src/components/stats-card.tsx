@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { formatNumber, formatCurrency, calculateCoverage, timeAgo } from "@/lib/utils"
+import { formatNumber, calculateCoverage, timeAgo } from "@/lib/utils"
 import { StatsResponse } from "@/types/lottery"
 
 interface StatsCardProps {

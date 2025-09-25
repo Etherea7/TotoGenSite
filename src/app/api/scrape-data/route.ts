@@ -3,7 +3,7 @@ import { simpleTotoScraper } from '@/lib/simple-scraper'
 import { lotteryDb } from '@/lib/supabase'
 import { ScrapeResponse } from '@/types/lottery'
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   const startTime = Date.now()
 
   try {

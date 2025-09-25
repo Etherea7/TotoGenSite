@@ -3,7 +3,7 @@ import { lotteryDb } from '@/lib/supabase'
 import { StatsResponse } from '@/types/lottery'
 import { calculateCoverage } from '@/lib/utils'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const stats = await lotteryDb.getStatistics()
 

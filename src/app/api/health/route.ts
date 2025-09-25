@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { lotteryDb } from '@/lib/supabase'
 import { HealthResponse } from '@/types/lottery'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const dbHealthy = await lotteryDb.healthCheck()
 

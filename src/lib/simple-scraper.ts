@@ -92,8 +92,8 @@ export class SimpleTotoScraper {
     const draws: LotteryDraw[] = []
 
     try {
-      // Look for the summary table
-      const tableMatch = html.match(/<table[^>]*id=["']summary-table["'][^>]*>(.*?)<\/table>/is)
+      // Look for the summary table (use [\s\S] instead of . with s flag for ES5 compatibility)
+      const tableMatch = html.match(/<table[^>]*id=["']summary-table["'][^>]*>([\s\S]*?)<\/table>/i)
       if (!tableMatch) {
         console.warn('⚠️ Summary table not found in HTML')
         return this.fallbackParsing(html)
@@ -101,8 +101,8 @@ export class SimpleTotoScraper {
 
       const tableHTML = tableMatch[1]
 
-      // Extract table rows
-      const rowMatches = tableHTML.match(/<tr[^>]*>(.*?)<\/tr>/gis) || []
+      // Extract table rows (use [\s\S] instead of . with s flag for ES5 compatibility)
+      const rowMatches = tableHTML.match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi) || []
       console.log(`🔍 Found ${rowMatches.length} table rows`)
 
       for (let i = 0; i < rowMatches.length; i++) {
@@ -111,8 +111,8 @@ export class SimpleTotoScraper {
         // Skip header rows
         if (rowHTML.toLowerCase().includes('<th')) continue
 
-        // Extract cells
-        const cellMatches = rowHTML.match(/<td[^>]*>(.*?)<\/td>/gis) || []
+        // Extract cells (use [\s\S] instead of . with s flag for ES5 compatibility)
+        const cellMatches = rowHTML.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || []
 
         if (cellMatches.length < 4) continue
 

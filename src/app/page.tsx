@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { CombinationGeneratorForm } from '@/components/combination-generator-form'
 import { DataScraper } from '@/components/data-scraper'
@@ -99,6 +100,26 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Navigation Tabs */}
+      <nav className="border-b bg-card">
+        <div className="container mx-auto px-4">
+          <div className="flex space-x-8">
+            <Link
+              href="/"
+              className="py-4 px-2 text-sm font-medium text-foreground border-b-2 border-primary"
+            >
+              Generator
+            </Link>
+            <Link
+              href="/dashboard"
+              className="py-4 px-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Dashboard
+            </Link>
+          </div>
+        </div>
+      </nav>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">

@@ -1,94 +1,94 @@
 -- Singapore Toto Lottery Database Schema (Corrected)
 
--- Main lottery results table
+-- Main lottery results table with CSV-matching column names
 CREATE TABLE lottery_draws (
     id SERIAL PRIMARY KEY,
-    draw_number INTEGER UNIQUE NOT NULL,
-    date DATE NOT NULL,
-    winning_number_1 INTEGER NOT NULL CHECK (winning_number_1 BETWEEN 1 AND 49),
-    winning_number_2 INTEGER NOT NULL CHECK (winning_number_2 BETWEEN 1 AND 49),
-    winning_number_3 INTEGER NOT NULL CHECK (winning_number_3 BETWEEN 1 AND 49),
-    winning_number_4 INTEGER NOT NULL CHECK (winning_number_4 BETWEEN 1 AND 49),
-    winning_number_5 INTEGER NOT NULL CHECK (winning_number_5 BETWEEN 1 AND 49),
-    winning_number_6 INTEGER NOT NULL CHECK (winning_number_6 BETWEEN 1 AND 49),
-    additional_number INTEGER NOT NULL CHECK (additional_number BETWEEN 1 AND 49),
+    "Draw" INTEGER UNIQUE NOT NULL,
+    "Date" DATE NOT NULL,
+    "Winning Number 1" INTEGER NOT NULL CHECK ("Winning Number 1" BETWEEN 1 AND 49),
+    "2" INTEGER NOT NULL CHECK ("2" BETWEEN 1 AND 49),
+    "3" INTEGER NOT NULL CHECK ("3" BETWEEN 1 AND 49),
+    "4" INTEGER NOT NULL CHECK ("4" BETWEEN 1 AND 49),
+    "5" INTEGER NOT NULL CHECK ("5" BETWEEN 1 AND 49),
+    "6" INTEGER NOT NULL CHECK ("6" BETWEEN 1 AND 49),
+    "Additional Number" INTEGER NOT NULL CHECK ("Additional Number" BETWEEN 1 AND 49),
 
     -- Additional statistics from CSV
-    from_last TEXT,
-    low_numbers INTEGER,
-    high_numbers INTEGER,
-    odd_numbers INTEGER,
-    even_numbers INTEGER,
-    range_1_10 INTEGER,
-    range_11_20 INTEGER,
-    range_21_30 INTEGER,
-    range_31_40 INTEGER,
-    range_41_50 INTEGER,
+    "From Last" TEXT,
+    "Low" INTEGER,
+    "High" INTEGER,
+    "Odd" INTEGER,
+    "Even" INTEGER,
+    "1-10" INTEGER,
+    "11-20" INTEGER,
+    "21-30" INTEGER,
+    "31-40" INTEGER,
+    "41-50" INTEGER,
 
     -- Prize information
-    division_1_winners INTEGER,
-    division_1_prize DECIMAL(12,2),
-    division_2_winners INTEGER,
-    division_2_prize DECIMAL(12,2),
-    division_3_winners INTEGER,
-    division_3_prize DECIMAL(12,2),
-    division_4_winners INTEGER,
-    division_4_prize DECIMAL(12,2),
-    division_5_winners INTEGER,
-    division_5_prize DECIMAL(12,2),
-    division_6_winners INTEGER,
-    division_6_prize DECIMAL(12,2),
-    division_7_winners INTEGER,
-    division_7_prize DECIMAL(12,2),
+    "Division 1 Winners" INTEGER,
+    "Division 1 Prize" DECIMAL(12,2),
+    "Division 2 Winners" INTEGER,
+    "Division 2 Prize" DECIMAL(12,2),
+    "Division 3 Winners" INTEGER,
+    "Division 3 Prize" DECIMAL(12,2),
+    "Division 4 Winners" INTEGER,
+    "Division 4 Prize" DECIMAL(12,2),
+    "Division 5 Winners" INTEGER,
+    "Division 5 Prize" DECIMAL(12,2),
+    "Division 6 Winners" INTEGER,
+    "Division 6 Prize" DECIMAL(12,2),
+    "Division 7 Winners" INTEGER,
+    "Division 7 Prize" DECIMAL(12,2),
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     -- Ensure no duplicate numbers within a draw (excluding additional number)
     CONSTRAINT unique_numbers_per_draw CHECK (
-        winning_number_1 != winning_number_2 AND
-        winning_number_1 != winning_number_3 AND
-        winning_number_1 != winning_number_4 AND
-        winning_number_1 != winning_number_5 AND
-        winning_number_1 != winning_number_6 AND
-        winning_number_2 != winning_number_3 AND
-        winning_number_2 != winning_number_4 AND
-        winning_number_2 != winning_number_5 AND
-        winning_number_2 != winning_number_6 AND
-        winning_number_3 != winning_number_4 AND
-        winning_number_3 != winning_number_5 AND
-        winning_number_3 != winning_number_6 AND
-        winning_number_4 != winning_number_5 AND
-        winning_number_4 != winning_number_6 AND
-        winning_number_5 != winning_number_6
+        "Winning Number 1" != "2" AND
+        "Winning Number 1" != "3" AND
+        "Winning Number 1" != "4" AND
+        "Winning Number 1" != "5" AND
+        "Winning Number 1" != "6" AND
+        "2" != "3" AND
+        "2" != "4" AND
+        "2" != "5" AND
+        "2" != "6" AND
+        "3" != "4" AND
+        "3" != "5" AND
+        "3" != "6" AND
+        "4" != "5" AND
+        "4" != "6" AND
+        "5" != "6"
     )
 );
 
 -- Indexes for performance
-CREATE INDEX idx_draw_number ON lottery_draws(draw_number DESC);
-CREATE INDEX idx_date ON lottery_draws(date DESC);
+CREATE INDEX idx_draw_number ON lottery_draws("Draw" DESC);
+CREATE INDEX idx_date ON lottery_draws("Date" DESC);
 
 -- Materialized view for combination checking (performance optimization)
 CREATE MATERIALIZED VIEW winning_combinations AS
 SELECT
+    -- Create a sorted comma-separated string for easier comparison
+    (
+        SELECT string_agg(num::text, ',' ORDER BY num)
+        FROM unnest(ARRAY["Winning Number 1", "2", "3", "4", "5", "6"]) AS num
+    ) as sorted_combination_text,
     ARRAY[
-        LEAST(winning_number_1, winning_number_2, winning_number_3, winning_number_4, winning_number_5, winning_number_6),
-        -- Second smallest
-        (SELECT val FROM unnest(ARRAY[winning_number_1, winning_number_2, winning_number_3, winning_number_4, winning_number_5, winning_number_6]) val ORDER BY val LIMIT 1 OFFSET 1),
-        -- Third smallest
-        (SELECT val FROM unnest(ARRAY[winning_number_1, winning_number_2, winning_number_3, winning_number_4, winning_number_5, winning_number_6]) val ORDER BY val LIMIT 1 OFFSET 2),
-        -- Fourth smallest
-        (SELECT val FROM unnest(ARRAY[winning_number_1, winning_number_2, winning_number_3, winning_number_4, winning_number_5, winning_number_6]) val ORDER BY val LIMIT 1 OFFSET 3),
-        -- Fifth smallest
-        (SELECT val FROM unnest(ARRAY[winning_number_1, winning_number_2, winning_number_3, winning_number_4, winning_number_5, winning_number_6]) val ORDER BY val LIMIT 1 OFFSET 4),
-        -- Largest
-        GREATEST(winning_number_1, winning_number_2, winning_number_3, winning_number_4, winning_number_5, winning_number_6)
-    ] as sorted_combination,
-    draw_number,
-    date
+        "Winning Number 1", "2", "3",
+        "4", "5", "6"
+    ] as combination_array,
+    "Draw" as draw_number,
+    "Date" as date
 FROM lottery_draws;
 
-CREATE UNIQUE INDEX idx_sorted_combination ON winning_combinations USING GIN (sorted_combination);
+-- Create a regular B-tree index on the text representation for fast lookups
+CREATE UNIQUE INDEX idx_sorted_combination_text ON winning_combinations (sorted_combination_text);
+
+-- Create a GIN index on the array for advanced array queries (optional, for future features)
+CREATE INDEX idx_combination_array ON winning_combinations USING GIN (combination_array);
 
 -- Function to refresh the materialized view
 CREATE OR REPLACE FUNCTION refresh_winning_combinations()

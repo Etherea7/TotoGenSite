@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { CombinationGeneratorForm } from '@/components/combination-generator-form'
+import { CombinationChecker } from '@/components/combination-checker'
 import { DataScraper } from '@/components/data-scraper'
 import { StatsCard } from '@/components/stats-card'
 import { StatsResponse } from '@/types/lottery'
@@ -86,34 +87,34 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
+      <header className="border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm shadow-sm">
+        <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-foreground mb-2">
+            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
               Singapore Toto Generator
             </h1>
-            <p className="text-muted-foreground">
-              Generate unique lottery combinations that have never appeared in history
+            <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+              Generate unique lottery combinations, check historical matches, and analyze number patterns
             </p>
           </div>
         </div>
       </header>
 
       {/* Navigation Tabs */}
-      <nav className="border-b bg-card">
+      <nav className="border-b bg-white/60 dark:bg-slate-950/60 backdrop-blur-sm">
         <div className="container mx-auto px-4">
           <div className="flex space-x-8">
             <Link
               href="/"
-              className="py-4 px-2 text-sm font-medium text-foreground border-b-2 border-primary"
+              className="py-4 px-2 text-sm font-medium text-blue-600 border-b-2 border-blue-500 transition-all duration-200"
             >
               Generator
             </Link>
             <Link
               href="/dashboard"
-              className="py-4 px-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="py-4 px-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 hover:border-b-2 hover:border-blue-300"
             >
               Dashboard
             </Link>
@@ -123,15 +124,20 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-8 md:grid-cols-3">
+        <div className="grid gap-8 lg:grid-cols-3">
           {/* Left Column - Main Actions */}
-          <div className="md:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Combination Checker */}
+            <CombinationChecker />
+
+            {/* Data Management */}
             <DataScraper
               onScrape={handleScrape}
               isLoading={isScraping}
               lastScrapeStatus={scrapeStatus}
             />
 
+            {/* Combination Generator */}
             <CombinationGeneratorForm
               onGenerate={handleGenerate}
               isLoading={isGenerating}
@@ -146,14 +152,14 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-card mt-16">
-        <div className="container mx-auto px-4 py-6">
-          <div className="text-center text-sm text-muted-foreground">
-            <p>
+      <footer className="border-t bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm mt-16">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-base font-medium mb-2">
               Singapore Toto Lottery Combination Generator
             </p>
-            <p className="mt-1">
-              Generates combinations based on historical lottery data analysis
+            <p>
+              Advanced analytics and historical data analysis for strategic lottery play
             </p>
           </div>
         </div>

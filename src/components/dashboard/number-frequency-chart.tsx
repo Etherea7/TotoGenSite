@@ -14,11 +14,18 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import { ArrowUpIcon, ArrowDownIcon, SearchIcon } from 'lucide-react'
+import { DateRangePicker } from '@/components/ui/date-range-picker'
+import { ArrowUpIcon, ArrowDownIcon, SearchIcon, CalendarIcon } from 'lucide-react'
 import type { NumberFrequency, NumberFrequencyResponse } from '@/app/api/number-frequency/route'
+import { format } from 'date-fns'
 
 interface ChartData extends NumberFrequency {
   isHighlighted?: boolean
+}
+
+interface DateRange {
+  from?: Date
+  to?: Date
 }
 
 export function NumberFrequencyChart() {
@@ -30,13 +37,14 @@ export function NumberFrequencyChart() {
   const [searchNumber, setSearchNumber] = useState('')
   const [highlightedNumber, setHighlightedNumber] = useState<number | null>(null)
   const [totalDraws, setTotalDraws] = useState(0)
+  const [dateRange, setDateRange] = useState<DateRange>({})
 
   const chartRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetchData()
-  }, [includeAdditional])
+  }, [includeAdditional, dateRange])
 
   useEffect(() => {
     // Sort data when sortOrder changes
@@ -57,7 +65,19 @@ export function NumberFrequencyChart() {
       setLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/number-frequency?includeAdditional=${includeAdditional}`)
+      // Build query parameters
+      const params = new URLSearchParams({
+        includeAdditional: includeAdditional.toString()
+      })
+
+      if (dateRange.from) {
+        params.append('startDate', format(dateRange.from, 'yyyy-MM-dd'))
+      }
+      if (dateRange.to) {
+        params.append('endDate', format(dateRange.to, 'yyyy-MM-dd'))
+      }
+
+      const response = await fetch(`/api/number-frequency?${params.toString()}`)
       const result: NumberFrequencyResponse = await response.json()
 
       if (!response.ok) {
@@ -133,6 +153,14 @@ export function NumberFrequencyChart() {
     setIncludeAdditional(prev => !prev)
   }
 
+  const handleDateRangeChange = (range: DateRange) => {
+    setDateRange(range)
+  }
+
+  const clearDateRange = () => {
+    setDateRange({})
+  }
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
@@ -190,47 +218,69 @@ export function NumberFrequencyChart() {
   return (
     <div className="space-y-4">
       {/* Controls */}
-      <div className="flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex gap-2 items-center">
-          <Button
-            onClick={toggleIncludeAdditional}
-            variant={includeAdditional ? "default" : "outline"}
-            size="sm"
-          >
-            {includeAdditional ? 'Including' : 'Excluding'} Additional Numbers
-          </Button>
+      <div className="space-y-4">
+        {/* Top row - Main controls */}
+        <div className="flex flex-wrap gap-4 items-center justify-between">
+          <div className="flex gap-2 items-center">
+            <Button
+              onClick={toggleIncludeAdditional}
+              variant={includeAdditional ? "default" : "outline"}
+              size="sm"
+            >
+              {includeAdditional ? 'Including' : 'Excluding'} Additional Numbers
+            </Button>
 
-          <Button
-            onClick={toggleSortOrder}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-1"
-          >
-            Sort by Frequency
-            {sortOrder === 'desc' ? <ArrowDownIcon size={16} /> : <ArrowUpIcon size={16} />}
-          </Button>
-        </div>
-
-        <div className="flex gap-2 items-center">
-          <div className="flex gap-1">
-            <Input
-              type="number"
-              placeholder="Enter number (1-49)"
-              value={searchNumber}
-              onChange={(e) => setSearchNumber(e.target.value)}
-              className="w-40"
-              min={1}
-              max={49}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <Button onClick={handleSearch} size="sm" variant="outline">
-              <SearchIcon size={16} />
+            <Button
+              onClick={toggleSortOrder}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+            >
+              Sort by Frequency
+              {sortOrder === 'desc' ? <ArrowDownIcon size={16} /> : <ArrowUpIcon size={16} />}
             </Button>
           </div>
 
-          {highlightedNumber && (
-            <Button onClick={clearHighlight} size="sm" variant="ghost">
-              Clear
+          <div className="flex gap-2 items-center">
+            <div className="flex gap-1">
+              <Input
+                type="number"
+                placeholder="Enter number (1-49)"
+                value={searchNumber}
+                onChange={(e) => setSearchNumber(e.target.value)}
+                className="w-40"
+                min={1}
+                max={49}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <Button onClick={handleSearch} size="sm" variant="outline">
+                <SearchIcon size={16} />
+              </Button>
+            </div>
+
+            {highlightedNumber && (
+              <Button onClick={clearHighlight} size="sm" variant="ghost">
+                Clear Search
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Second row - Date filter */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex items-center gap-2">
+            <CalendarIcon size={16} className="text-muted-foreground" />
+            <span className="text-sm font-medium">Date Range:</span>
+          </div>
+          <DateRangePicker
+            value={dateRange}
+            onChange={handleDateRangeChange}
+            placeholder="All time"
+            className="w-64"
+          />
+          {(dateRange.from || dateRange.to) && (
+            <Button onClick={clearDateRange} size="sm" variant="ghost">
+              Clear Date Range
             </Button>
           )}
         </div>

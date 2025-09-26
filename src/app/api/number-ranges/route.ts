@@ -5,18 +5,19 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-export interface NumberFrequency {
-  number: number 
-  frequency: number
-  winningCount: number
-  additionalCount?: number
+export interface RangeData {
+  range: string
+  count: number
+  percentage: number
+  color?: string
 }
 
-export interface NumberFrequencyResponse {
+export interface NumberRangeResponse {
   success: boolean
-  data: NumberFrequency[]
-  includeAdditional: boolean
+  data: RangeData[]
+  totalNumbers: number
   totalDraws: number
+  includeAdditional: boolean
   dateRange?: {
     startDate?: string
     endDate?: string
@@ -34,6 +35,14 @@ interface DrawData {
   '6': number | null
   'Additional Number'?: number | null
 }
+
+const NUMBER_RANGES = [
+  { range: '1-10', min: 1, max: 10 },
+  { range: '11-20', min: 11, max: 20 },
+  { range: '21-30', min: 21, max: 30 },
+  { range: '31-40', min: 31, max: 40 },
+  { range: '41-49', min: 41, max: 49 }
+]
 
 export async function GET(request: Request) {
   try {
@@ -71,8 +80,9 @@ export async function GET(request: Request) {
       return NextResponse.json({
         success: false,
         data: [],
-        includeAdditional,
+        totalNumbers: 0,
         totalDraws: 0,
+        includeAdditional,
         error: 'Failed to fetch lottery data'
       }, { status: 500 })
     }
@@ -80,20 +90,31 @@ export async function GET(request: Request) {
     if (!draws || draws.length === 0) {
       return NextResponse.json({
         success: true,
-        data: [],
-        includeAdditional,
+        data: NUMBER_RANGES.map(range => ({
+          range: range.range,
+          count: 0,
+          percentage: 0
+        })),
+        totalNumbers: 0,
         totalDraws: 0,
+        includeAdditional,
+        dateRange: {
+          ...(startDate && { startDate }),
+          ...(endDate && { endDate })
+        },
         message: 'No lottery data found'
       })
     }
 
-    // Initialize frequency counters for numbers 1-49
-    const frequencies: Record<number, { winningCount: number, additionalCount: number }> = {}
-    for (let i = 1; i <= 49; i++) {
-      frequencies[i] = { winningCount: 0, additionalCount: 0 }
-    }
+    // Initialize range counters
+    const rangeCounts: Record<string, number> = {}
+    NUMBER_RANGES.forEach(range => {
+      rangeCounts[range.range] = 0
+    })
 
-    // Count frequencies
+    let totalNumbers = 0
+
+    // Count numbers in each range
     draws.forEach(draw => {
       // Count winning numbers (columns 1-6)
       const winningNumbers = [
@@ -106,8 +127,12 @@ export async function GET(request: Request) {
       ].filter((num): num is number => num !== null && num >= 1 && num <= 49)
 
       winningNumbers.forEach(num => {
-        if (frequencies[num]) {
-          frequencies[num].winningCount++
+        totalNumbers++
+
+        // Find which range this number belongs to
+        const range = NUMBER_RANGES.find(r => num >= r.min && num <= r.max)
+        if (range) {
+          rangeCounts[range.range]++
         }
       })
 
@@ -115,44 +140,48 @@ export async function GET(request: Request) {
       if (includeAdditional && draw["Additional Number"] &&
           draw["Additional Number"] >= 1 && draw["Additional Number"] <= 49) {
         const additionalNum = draw["Additional Number"]!
-        if (frequencies[additionalNum]) {
-          frequencies[additionalNum].additionalCount++
+        totalNumbers++
+
+        const range = NUMBER_RANGES.find(r => additionalNum >= r.min && additionalNum <= r.max)
+        if (range) {
+          rangeCounts[range.range]++
         }
       }
     })
 
-    // Transform to response format
-    const data: NumberFrequency[] = Object.entries(frequencies).map(([numberStr, counts]) => {
-      const number = parseInt(numberStr)
+    // Transform to response format with percentages
+    const data: RangeData[] = NUMBER_RANGES.map(range => {
+      const count = rangeCounts[range.range]
+      const percentage = totalNumbers > 0 ? (count / totalNumbers) * 100 : 0
+
       return {
-        number,
-        frequency: includeAdditional
-          ? counts.winningCount + counts.additionalCount
-          : counts.winningCount,
-        winningCount: counts.winningCount,
-        ...(includeAdditional && { additionalCount: counts.additionalCount })
+        range: range.range,
+        count,
+        percentage
       }
     })
 
     return NextResponse.json({
       success: true,
       data,
-      includeAdditional,
+      totalNumbers,
       totalDraws: draws.length,
+      includeAdditional,
       dateRange: {
         ...(startDate && { startDate }),
         ...(endDate && { endDate })
       },
-      message: `Successfully retrieved frequency data for ${draws.length} draws${startDate || endDate ? ` (filtered by date range)` : ''}`
+      message: `Successfully retrieved range data for ${draws.length} draws${startDate || endDate ? ` (filtered by date range)` : ''}`
     })
 
   } catch (error) {
-    console.error('Error in number-frequency API:', error)
+    console.error('Error in number-ranges API:', error)
     return NextResponse.json({
       success: false,
       data: [],
-      includeAdditional: false,
+      totalNumbers: 0,
       totalDraws: 0,
+      includeAdditional: false,
       error: 'Internal server error'
     }, { status: 500 })
   }

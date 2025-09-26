@@ -30,6 +30,7 @@ interface RangeData {
   count: number
   percentage: number
   color: string
+  [key: string]: string | number
 }
 
 interface NumberRangeResponse {
@@ -306,10 +307,11 @@ export function NumberRangeChart() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ range, percentage }) => `${range}: ${percentage.toFixed(1)}%`}
+                    label={({ name, percent }) => `${name}: ${(percent as number * 100).toFixed(1)}%`}
                     outerRadius={120}
                     fill="#8884d8"
                     dataKey="count"
+                    nameKey="range"
                   >
                     {data.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />

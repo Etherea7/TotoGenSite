@@ -6,7 +6,8 @@ import { CombinationGeneratorForm } from '@/components/combination-generator-for
 import { CombinationChecker } from '@/components/combination-checker'
 import { DataScraper } from '@/components/data-scraper'
 import { StatsCard } from '@/components/stats-card'
-import { StatsResponse } from '@/types/lottery'
+import { SystemEntryCalculator } from '@/components/system-entry-calculator'
+import { StatsResponse, GenerationStrategy, StrategyOptions } from '@/types/lottery'
 
 export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false)
@@ -35,7 +36,11 @@ export default function Home() {
     }
   }
 
-  const handleGenerate = async (count: number): Promise<number[][]> => {
+  const handleGenerate = async (
+    count: number,
+    strategy: GenerationStrategy,
+    strategyOptions?: StrategyOptions,
+  ): Promise<number[][]> => {
     setIsGenerating(true)
     try {
       const response = await fetch('/api/generate-combinations', {
@@ -43,7 +48,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ count }),
+        body: JSON.stringify({ count, strategy, strategyOptions }),
       })
 
       if (!response.ok) {
@@ -142,6 +147,9 @@ export default function Home() {
               onGenerate={handleGenerate}
               isLoading={isGenerating}
             />
+
+            {/* System Entry Calculator */}
+            <SystemEntryCalculator />
           </div>
 
           {/* Right Column - Statistics */}

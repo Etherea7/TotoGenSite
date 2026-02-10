@@ -207,6 +207,31 @@ export class LotteryDatabase {
   }
 
   /**
+   * Get all draw numbers for strategy calculations (frequency analysis, pair detection)
+   */
+  async getAllDrawNumbers(): Promise<number[][]> {
+    const { data, error } = await this.client
+      .from('lottery_draws')
+      .select('"Winning Number 1", "2", "3", "4", "5", "6"')
+
+    if (error) {
+      console.error('Error fetching draw numbers:', error)
+      throw new Error(`Failed to fetch draw numbers: ${error.message}`)
+    }
+
+    if (!data) return []
+
+    return data.map(row => [
+      row["Winning Number 1"],
+      row["2"],
+      row["3"],
+      row["4"],
+      row["5"],
+      row["6"],
+    ].filter((n): n is number => typeof n === 'number'))
+  }
+
+  /**
    * Refresh the materialized view for combination lookups
    */
   async refreshCombinationsView(): Promise<void> {

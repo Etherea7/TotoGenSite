@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { combinationGenerator } from '@/lib/combination-generator'
-import { GenerateRequest, GenerateResponse } from '@/types/lottery'
+import { GenerateRequest, GenerateResponse, GenerationStrategy } from '@/types/lottery'
 import { TOTO_CONSTANTS } from '@/types/lottery'
 
 export async function POST(request: NextRequest) {
@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body: GenerateRequest = await request.json()
-    const { count } = body
+    const { count, strategy, strategyOptions } = body
 
     // Validate input
     if (!count || typeof count !== 'number') {
@@ -39,8 +39,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate strategy if provided
+    const validStrategy = strategy && Object.values(GenerationStrategy).includes(strategy)
+      ? strategy
+      : GenerationStrategy.PURE_RANDOM
+
     // Generate combinations
-    const result = await combinationGenerator.generateUniqueCombinations(count)
+    const result = await combinationGenerator.generateUniqueCombinations(
+      count,
+      validStrategy,
+      strategyOptions,
+    )
 
     const response: GenerateResponse = {
       success: true,
@@ -48,6 +57,7 @@ export async function POST(request: NextRequest) {
       processingTime: result.processingTime,
       totalExistingCombinations: result.totalExistingCombinations,
       remainingPossible: result.remainingPossible,
+      strategy: result.strategy,
     }
 
     return NextResponse.json(response)

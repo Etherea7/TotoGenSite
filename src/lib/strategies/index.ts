@@ -1,0 +1,6 @@
+export type { GenerationStrategyHandler } from './base-strategy'
+export { PureRandomStrategy } from './pure-random'
+export { HotNumbersStrategy } from './hot-numbers'
+export { ColdDiversificationStrategy } from './cold-diversification'
+export { PairClusteringStrategy } from './pair-clustering'
+export { JackpotProtectionStrategy } from './jackpot-protection'

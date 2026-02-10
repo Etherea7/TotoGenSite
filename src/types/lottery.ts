@@ -49,19 +49,6 @@ export interface LotteryCombination {
   sortedKey: string;
 }
 
-export interface GenerateRequest {
-  count: number; // 1-50
-}
-
-export interface GenerateResponse {
-  success: boolean;
-  combinations: number[][];
-  processingTime: number;
-  totalExistingCombinations: number;
-  remainingPossible: number;
-  message?: string;
-}
-
 export interface ScrapeResponse {
   success: boolean;
   newRecords: number;
@@ -123,6 +110,68 @@ export interface CSVRow {
   'Division 6 Prize': string;
   'Division 7 Winners': string;
   'Division 7 Prize': string;
+}
+
+// Generation Strategy types
+export enum GenerationStrategy {
+  PURE_RANDOM = 'PURE_RANDOM',
+  HOT_NUMBERS = 'HOT_NUMBERS',
+  COLD_DIVERSIFICATION = 'COLD_DIVERSIFICATION',
+  PAIR_CLUSTERING = 'PAIR_CLUSTERING',
+  JACKPOT_PROTECTION = 'JACKPOT_PROTECTION',
+}
+
+export interface StrategyOptions {
+  hotWeightMultiplier?: number; // 1.15-1.19x weight for hot numbers
+  avoidRange?: [number, number]; // Range to limit (e.g., [1, 12] for Jackpot Protection)
+  minPairFrequency?: number; // Minimum pair frequency for Pair Clustering
+}
+
+export interface StrategyInfo {
+  id: GenerationStrategy;
+  name: string;
+  shortDescription: string;
+  description: string;
+  icon: string; // Lucide icon name
+}
+
+export interface SystemEntryType {
+  type: string; // e.g., "System 7", "System 8"
+  numbersSelected: number;
+  combinations: number;
+  cost: number; // in SGD
+}
+
+export interface GenerateRequest {
+  count: number; // 1-50
+  strategy?: GenerationStrategy;
+  strategyOptions?: StrategyOptions;
+}
+
+export interface GenerateResponse {
+  success: boolean;
+  combinations: number[][];
+  processingTime: number;
+  totalExistingCombinations: number;
+  remainingPossible: number;
+  strategy?: GenerationStrategy;
+  message?: string;
+}
+
+// Number frequency data used by strategies
+export interface NumberFrequency {
+  number: number;
+  frequency: number;
+}
+
+export interface PairFrequency {
+  pair: [number, number];
+  frequency: number;
+}
+
+export interface StrategyContext {
+  frequencyData: NumberFrequency[];
+  pairFrequencies: PairFrequency[];
 }
 
 // UI State types

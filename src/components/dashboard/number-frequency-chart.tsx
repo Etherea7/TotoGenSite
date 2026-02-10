@@ -167,7 +167,7 @@ export function NumberFrequencyChart() {
       return (
         <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
           <p className="font-semibold text-gray-900">Number: {label}</p>
-          <p className="text-blue-600 font-medium">
+          <p className="text-amber-600 font-medium">
             Total Appearances: {payload[0].value}
           </p>
           {includeAdditional && (
@@ -332,8 +332,8 @@ export function NumberFrequencyChart() {
                   <Cell
                     key={`cell-${index}`}
                     fill={entry.isHighlighted
-                      ? "#ef4444"  // Red for highlighted
-                      : "#3b82f6"  // Blue for normal bars
+                      ? "#DC2626"  // Lucky red for highlighted
+                      : "#D97706"  // Gold-dark for normal bars
                     }
                   />
                 ))}

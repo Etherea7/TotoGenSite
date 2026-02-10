@@ -30,7 +30,7 @@ export function DataScraper({ onScrape, isLoading, lastScrapeStatus }: DataScrap
   const getStatusIcon = () => {
     if (isLoading) return <Loader2 className="w-4 h-4 animate-spin" />
     if (lastScrapeStatus === 'success') return <CheckCircle className="w-4 h-4 text-green-500" />
-    if (lastScrapeStatus === 'error') return <AlertCircle className="w-4 h-4 text-red-500" />
+    if (lastScrapeStatus === 'error') return <AlertCircle className="w-4 h-4 text-lucky-red" />
     return <Download className="w-4 h-4" />
   }
 
@@ -42,10 +42,10 @@ export function DataScraper({ onScrape, isLoading, lastScrapeStatus }: DataScrap
   }
 
   return (
-    <Card>
+    <Card className="border-gold-mid/30">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-2 text-gold-dark dark:text-gold-mid">
             <Download className="w-5 h-5" />
             Data Synchronization
           </span>
@@ -59,13 +59,12 @@ export function DataScraper({ onScrape, isLoading, lastScrapeStatus }: DataScrap
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
             Scrape the latest lottery results from Singapore Toto official data source.
-            This will update the database with any new draws.
           </p>
 
           <Button
             onClick={handleScrape}
             disabled={isLoading}
-            className="w-full"
+            className="w-full bg-gold-dark hover:bg-gold-mid text-white"
             variant={result?.success === false ? "destructive" : "default"}
           >
             {isLoading ? (
@@ -84,8 +83,8 @@ export function DataScraper({ onScrape, isLoading, lastScrapeStatus }: DataScrap
           {result && (
             <div className={`p-3 rounded-md text-sm ${
               result.success
-                ? 'bg-green-50 border border-green-200 text-green-800'
-                : 'bg-red-50 border border-red-200 text-red-800'
+                ? 'bg-green-50 border border-green-200 text-green-800 dark:bg-green-950/20 dark:border-green-800 dark:text-green-200'
+                : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-950/20 dark:border-red-800 dark:text-red-200'
             }`}>
               <div className="flex items-center gap-2 mb-2">
                 {result.success ? (

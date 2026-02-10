@@ -1,6 +1,5 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatNumber, calculateCoverage, timeAgo } from "@/lib/utils"
 import { StatsResponse } from "@/types/lottery"
 
@@ -12,83 +11,50 @@ interface StatsCardProps {
 export function StatsCard({ stats, isLoading }: StatsCardProps) {
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Statistics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
+      <div className="w-full border-b border-gold-mid/20 bg-card/80 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-center gap-8">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="flex justify-between">
-                <div className="h-4 bg-muted rounded animate-pulse w-24" />
-                <div className="h-4 bg-muted rounded animate-pulse w-16" />
+              <div key={i} className="flex items-center gap-2">
+                <div className="h-3 bg-muted rounded animate-pulse w-16" />
+                <div className="h-4 bg-muted rounded animate-pulse w-12" />
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     )
   }
 
-  if (!stats) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Statistics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">No statistics available</p>
-        </CardContent>
-      </Card>
-    )
-  }
+  if (!stats) return null
 
   const coverage = calculateCoverage(stats.uniqueCombinations)
 
+  const statItems = [
+    { label: 'Total Draws', value: formatNumber(stats.totalDraws) },
+    { label: 'Unique Combos', value: formatNumber(stats.uniqueCombinations) },
+    { label: 'Coverage', value: `${coverage.toFixed(4)}%` },
+    { label: 'Latest Draw', value: `#${stats.latestDraw}` },
+    { label: 'Updated', value: timeAgo(stats.lastUpdated) },
+  ]
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Statistics</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Total draws:</span>
-            <span className="font-semibold">{formatNumber(stats.totalDraws)}</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Unique combinations:</span>
-            <span className="font-semibold">{formatNumber(stats.uniqueCombinations)}</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Coverage:</span>
-            <span className="font-semibold">
-              {coverage.toFixed(4)}%
-            </span>
-          </div>
-
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Latest draw:</span>
-            <span className="font-semibold">#{stats.latestDraw}</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Latest date:</span>
-            <span className="font-semibold">
-              {stats.latestDate ? new Date(stats.latestDate).toLocaleDateString() : 'N/A'}
-            </span>
-          </div>
-
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Last updated:</span>
-            <span className="font-semibold text-xs">
-              {timeAgo(stats.lastUpdated)}
-            </span>
-          </div>
+    <div className="w-full border-b border-gold-mid/20 bg-card/80 backdrop-blur-sm">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex items-center justify-center gap-4 md:gap-8 flex-wrap">
+          {statItems.map((item, idx) => (
+            <div key={item.label} className="flex items-center gap-4">
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground uppercase tracking-wider">{item.label}</div>
+                <div className="text-sm font-bold text-gold-dark dark:text-gold-mid">{item.value}</div>
+              </div>
+              {idx < statItems.length - 1 && (
+                <div className="hidden md:block w-px h-6 bg-gold-mid/30" />
+              )}
+            </div>
+          ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

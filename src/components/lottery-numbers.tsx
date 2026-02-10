@@ -40,7 +40,7 @@ export function LotteryNumbers({
                 <div
                   key={`placeholder-${index}`}
                   className={cn(
-                    "rounded-full border-2 border-dashed border-slate-300 dark:border-slate-600",
+                    "rounded-full border-2 border-dashed border-gold-mid/40 dark:border-gold-dark/40",
                     sizeClasses[size]
                   )}
                 />
@@ -55,7 +55,7 @@ export function LotteryNumbers({
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                   className={cn(
-                    "rounded-full bg-blue-500 text-white font-semibold flex items-center justify-center shadow-md",
+                    "rounded-full bg-gradient-to-br from-lucky-red to-lucky-red-dark text-white font-semibold flex items-center justify-center shadow-md",
                     sizeClasses[size]
                   )}
                 >
@@ -68,7 +68,7 @@ export function LotteryNumbers({
               <div
                 key={`${number}-${index}`}
                 className={cn(
-                  "rounded-full bg-blue-500 text-white font-semibold flex items-center justify-center shadow-md",
+                  "rounded-full bg-gradient-to-br from-lucky-red to-lucky-red-dark text-white font-semibold flex items-center justify-center shadow-md",
                   sizeClasses[size]
                 )}
               >
@@ -85,7 +85,7 @@ export function LotteryNumbers({
           <div className="text-muted-foreground font-medium text-sm">+</div>
           <div
             className={cn(
-              "rounded-full bg-orange-500 text-white font-semibold flex items-center justify-center shadow-md",
+              "rounded-full bg-gradient-to-br from-gold-mid to-gold-dark text-white font-semibold flex items-center justify-center shadow-md",
               sizeClasses[size]
             )}
           >

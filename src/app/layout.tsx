@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Toto Number Generator",
-  description: "It's lit",
+  title: "TOTO Generator - Lucky Number Generator",
+  description: "Singapore Toto lottery analytics - generate unique combinations, check history, and analyze number patterns",
 };
 
 export default function RootLayout({

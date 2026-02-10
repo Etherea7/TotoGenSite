@@ -47,11 +47,11 @@ interface NumberRangeResponse {
 }
 
 const RANGE_COLORS = [
-  '#3b82f6', // blue
-  '#10b981', // emerald
-  '#f59e0b', // amber
-  '#ef4444', // red
-  '#8b5cf6'  // violet
+  '#D97706', // gold-dark
+  '#DC2626', // lucky-red
+  '#F59E0B', // gold-mid
+  '#991B1B', // lucky-red-dark
+  '#FFD700'  // gold
 ]
 
 export function NumberRangeChart() {
@@ -131,7 +131,7 @@ export function NumberRangeChart() {
       return (
         <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
           <p className="font-semibold text-gray-900">Range: {label}</p>
-          <p className="text-blue-600 font-medium">
+          <p className="text-amber-600 font-medium">
             Count: {payload[0].value}
           </p>
           <p className="text-sm text-gray-600">
@@ -149,7 +149,7 @@ export function NumberRangeChart() {
       return (
         <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
           <p className="font-semibold text-gray-900">Range: {data.range}</p>
-          <p className="text-blue-600 font-medium">
+          <p className="text-amber-600 font-medium">
             Count: {data.count}
           </p>
           <p className="text-sm text-gray-600">

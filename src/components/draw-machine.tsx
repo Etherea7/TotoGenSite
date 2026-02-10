@@ -18,7 +18,7 @@ function FloatingBall({ num, index }: { num: number; index: number }) {
 
   return (
     <motion.div
-      className="absolute w-7 h-7 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 dark:from-slate-500 dark:to-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-200 shadow-inner"
+      className="absolute w-7 h-7 rounded-full bg-gradient-to-br from-gold/60 to-gold-mid/80 dark:from-gold-dark/60 dark:to-gold-mid/80 flex items-center justify-center text-[10px] font-bold text-lucky-red-dark dark:text-gold shadow-inner"
       initial={{
         x: Math.cos(angle) * radius,
         y: Math.sin(angle) * radius,
@@ -62,7 +62,7 @@ function RevealedBall({
     <motion.div
       className={cn(
         'w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-lg',
-        'bg-gradient-to-br from-blue-500 to-blue-600',
+        'bg-gradient-to-br from-lucky-red to-lucky-red-dark',
       )}
       initial={{ scale: 0.3, y: 80, opacity: 0 }}
       animate={{
@@ -83,7 +83,7 @@ function RevealedBall({
       }}
     >
       <motion.div
-        className="absolute inset-0 rounded-full bg-blue-400/50"
+        className="absolute inset-0 rounded-full bg-gold-mid/50"
         initial={{ scale: 1 }}
         animate={{ scale: [1, 1.6, 1], opacity: [0.6, 0, 0] }}
         transition={{ duration: 0.6, delay: 0.1 }}
@@ -127,7 +127,7 @@ export function DrawMachine({
               ) : (
                 <motion.div
                   key={`placeholder-${i}`}
-                  className="w-12 h-12 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-600"
+                  className="w-12 h-12 rounded-full border-2 border-dashed border-gold-mid/40 dark:border-gold-dark/40"
                   animate={isSpinning ? { scale: [1, 0.95, 1] } : {}}
                   transition={{ duration: 0.5, repeat: Infinity }}
                 />
@@ -141,13 +141,13 @@ export function DrawMachine({
       <motion.div
         className={cn(
           'relative w-48 h-48 rounded-full flex items-center justify-center',
-          'bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900',
+          'bg-gradient-to-br from-cream to-gold/20 dark:from-deep-dark dark:to-lucky-red-dark/20',
           'border-4',
           isCelebrating
-            ? 'border-yellow-400 shadow-[0_0_30px_rgba(234,179,8,0.4)]'
+            ? 'border-gold shadow-[0_0_30px_rgba(255,215,0,0.5)]'
             : isSpinning
-              ? 'border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)]'
-              : 'border-slate-300 dark:border-slate-600',
+              ? 'border-gold-mid shadow-[0_0_20px_rgba(245,158,11,0.3)]'
+              : 'border-gold-mid/50 dark:border-gold-dark/50',
         )}
         animate={
           isSpinning
@@ -165,7 +165,7 @@ export function DrawMachine({
         }
       >
         {/* Inner glow */}
-        <div className="absolute inset-2 rounded-full bg-gradient-to-br from-white/60 to-transparent dark:from-slate-700/60" />
+        <div className="absolute inset-2 rounded-full bg-gradient-to-br from-white/60 to-transparent dark:from-lucky-red-dark/20" />
 
         {/* Floating balls inside */}
         <div className="relative">
@@ -176,7 +176,7 @@ export function DrawMachine({
 
         {/* Center text */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xs font-medium text-slate-400 dark:text-slate-500 bg-white/80 dark:bg-slate-900/80 px-2 py-1 rounded-full">
+          <span className="text-xs font-medium text-gold-dark dark:text-gold-mid bg-white/80 dark:bg-deep-dark/80 px-2 py-1 rounded-full">
             {isSpinning ? 'Mixing...' : isCelebrating ? 'Complete!' : 'TOTO'}
           </span>
         </div>

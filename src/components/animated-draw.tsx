@@ -9,7 +9,7 @@ import { LotteryNumbers } from '@/components/lottery-numbers'
 import { soundManager } from '@/lib/sound-manager'
 import { SkipForward, FastForward, ChevronRight } from 'lucide-react'
 
-type DrawState = 'IDLE' | 'SPINNING' | 'REVEALING' | 'CELEBRATING' | 'COMPLETE'
+type DrawState = 'IDLE' | 'SPINNING' | 'REVEALING' | 'RAPID_REVEALING' | 'CELEBRATING' | 'COMPLETE'
 
 interface AnimatedDrawProps {
   combinations: number[][]
@@ -31,6 +31,8 @@ export function AnimatedDraw({
   const machineHumRef = useRef<string | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const initRef = useRef(false)
+  // Track which combos to rapid-reveal after current one
+  const rapidRemainderRef = useRef<number[][]>([])
 
   const currentCombo = useMemo(
     () => combinations[currentComboIndex] ?? [],
@@ -67,7 +69,7 @@ export function AnimatedDraw({
     return () => clearTimer()
   }, [isActive, state, combinations.length, clearTimer])
 
-  // Reveal balls one at a time
+  // Reveal balls one at a time (normal speed)
   useEffect(() => {
     if (state !== 'REVEALING') return
 
@@ -85,12 +87,11 @@ export function AnimatedDraw({
       setState('CELEBRATING')
       soundManager.play('celebration', { volume: 0.7 })
 
-      // Fire confetti
       confetti({
         particleCount: 80,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b'],
+        colors: ['#FFD700', '#DC2626', '#F59E0B', '#EF4444'],
       })
 
       timerRef.current = setTimeout(() => {
@@ -102,6 +103,34 @@ export function AnimatedDraw({
     return () => clearTimer()
   }, [state, revealedCount, currentCombo, clearTimer])
 
+  // Rapid reveal balls at 100ms intervals (skip mode)
+  useEffect(() => {
+    if (state !== 'RAPID_REVEALING') return
+
+    if (revealedCount < 6) {
+      timerRef.current = setTimeout(() => {
+        soundManager.play('ball-click', { volume: 0.4 })
+        setRevealedCount(prev => prev + 1)
+      }, 100)
+    } else {
+      // Current combo fully revealed - add it to completed
+      setCompletedCombos(prev => [...prev, currentCombo])
+
+      // Add any remaining combos
+      const remainder = rapidRemainderRef.current
+      if (remainder.length > 0) {
+        setCompletedCombos(prev => [...prev, ...remainder])
+        rapidRemainderRef.current = []
+      }
+
+      setState('COMPLETE')
+      setCurrentComboIndex(combinations.length)
+      onSkip()
+    }
+
+    return () => clearTimer()
+  }, [state, revealedCount, currentCombo, combinations.length, onSkip, clearTimer])
+
   const handleSkip = () => {
     clearTimer()
     if (machineHumRef.current) {
@@ -109,11 +138,13 @@ export function AnimatedDraw({
       machineHumRef.current = null
     }
     soundManager.stopAll()
-    setRevealedCount(6)
-    setState('COMPLETE')
-    setCompletedCombos([...completedCombos, ...combinations.slice(currentComboIndex)])
-    setCurrentComboIndex(combinations.length)
-    onSkip()
+
+    // Store remaining combos after the current one for adding after rapid reveal
+    rapidRemainderRef.current = combinations.slice(currentComboIndex + 1)
+
+    // Start rapid reveal of current combo from scratch
+    setRevealedCount(0)
+    setState('RAPID_REVEALING')
   }
 
   const handleAnimateNext = () => {
@@ -139,14 +170,24 @@ export function AnimatedDraw({
       soundManager.stop(machineHumRef.current)
       machineHumRef.current = null
     }
-    const remaining = combinations.slice(currentComboIndex + (state === 'COMPLETE' ? 1 : 0))
-    setCompletedCombos(prev => [...prev, ...remaining])
-    setCurrentComboIndex(combinations.length)
-    setState('COMPLETE')
-    onComplete()
+
+    // Store all remaining combos after the next one
+    const nextIndex = currentComboIndex + 1
+    rapidRemainderRef.current = combinations.slice(nextIndex + 1)
+
+    // Move to the next combo and rapid-reveal it
+    if (nextIndex < combinations.length) {
+      setCurrentComboIndex(nextIndex)
+      setRevealedCount(0)
+      setState('RAPID_REVEALING')
+    } else {
+      onComplete()
+    }
   }
 
   if (!isActive) return null
+
+  const isRapidOrRevealing = state === 'RAPID_REVEALING' || state === 'REVEALING'
 
   return (
     <div className="space-y-6">
@@ -168,7 +209,7 @@ export function AnimatedDraw({
                 <span className="text-sm text-muted-foreground font-medium">
                   #{idx + 1}
                 </span>
-                <LotteryNumbers numbers={combo} size="sm" />
+                <LotteryNumbers numbers={combo} size="sm" animated />
               </motion.div>
             ))}
           </motion.div>
@@ -192,6 +233,7 @@ export function AnimatedDraw({
           <div className="mt-4 text-sm text-muted-foreground">
             {state === 'SPINNING' && 'Mixing numbers...'}
             {state === 'REVEALING' && `Revealing ball ${revealedCount + 1} of 6...`}
+            {state === 'RAPID_REVEALING' && `Revealing ball ${revealedCount + 1} of 6...`}
             {state === 'CELEBRATING' && 'Complete!'}
           </div>
         </motion.div>
@@ -199,7 +241,7 @@ export function AnimatedDraw({
 
       {/* Control buttons */}
       <div className="flex gap-2 justify-center flex-wrap">
-        {(state === 'SPINNING' || state === 'REVEALING') && (
+        {(state === 'SPINNING' || isRapidOrRevealing) && state !== 'RAPID_REVEALING' && (
           <Button variant="outline" size="sm" onClick={handleSkip}>
             <SkipForward className="w-4 h-4 mr-1" />
             Skip All

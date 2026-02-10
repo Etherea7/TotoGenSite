@@ -1,23 +1,64 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #3b82f6;
+  --background: #FFF7ED;
+  --foreground: #1C1917;
+  --primary: #D97706;
   --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --muted: #f8fafc;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
-  --destructive: #ef4444;
+  --secondary: #FEF3C7;
+  --secondary-foreground: #78350F;
+  --muted: #FFF7ED;
+  --muted-foreground: #78716C;
+  --accent: #FEF3C7;
+  --accent-foreground: #78350F;
+  --destructive: #DC2626;
   --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #3b82f6;
-  --card: #ffffff;
-  --card-foreground: #171717;
+  --border: #F59E0B;
+  --input: #FDE68A;
+  --ring: #D97706;
+  --card: #FFFFFF;
+  --card-foreground: #1C1917;
+
+  /* Custom lottery tokens */
+  --lucky-red: #DC2626;
+  --lucky-red-light: #EF4444;
+  --lucky-red-dark: #991B1B;
+  --gold: #FFD700;
+  --gold-mid: #F59E0B;
+  --gold-dark: #D97706;
+  --cream: #FFF7ED;
+  --deep-dark: #1A0A0A;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1A0A0A;
+    --foreground: #FEF3C7;
+    --primary: #F59E0B;
+    --primary-foreground: #1C1917;
+    --secondary: #292524;
+    --secondary-foreground: #FEF3C7;
+    --muted: #292524;
+    --muted-foreground: #A8A29E;
+    --accent: #292524;
+    --accent-foreground: #FEF3C7;
+    --destructive: #DC2626;
+    --destructive-foreground: #FEF3C7;
+    --border: #78350F;
+    --input: #44403C;
+    --ring: #F59E0B;
+    --card: #1F0D0D;
+    --card-foreground: #FEF3C7;
+
+    --lucky-red: #EF4444;
+    --lucky-red-light: #F87171;
+    --lucky-red-dark: #DC2626;
+    --gold: #FFD700;
+    --gold-mid: #F59E0B;
+    --gold-dark: #D97706;
+    --cream: #FFF7ED;
+    --deep-dark: #1A0A0A;
+  }
 }
 
 @theme inline {
@@ -38,30 +79,16 @@
   --color-ring: var(--ring);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-lucky-red: var(--lucky-red);
+  --color-lucky-red-light: var(--lucky-red-light);
+  --color-lucky-red-dark: var(--lucky-red-dark);
+  --color-gold: var(--gold);
+  --color-gold-mid: var(--gold-mid);
+  --color-gold-dark: var(--gold-dark);
+  --color-cream: var(--cream);
+  --color-deep-dark: var(--deep-dark);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --primary: #60a5fa;
-    --primary-foreground: #1e293b;
-    --secondary: #1e293b;
-    --secondary-foreground: #f8fafc;
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
-    --accent: #1e293b;
-    --accent-foreground: #f8fafc;
-    --destructive: #dc2626;
-    --destructive-foreground: #f8fafc;
-    --border: #334155;
-    --input: #334155;
-    --ring: #60a5fa;
-    --card: #0f172a;
-    --card-foreground: #f8fafc;
-  }
 }
 
 body {
@@ -91,12 +118,47 @@ body {
   }
 }
 
+@keyframes goldenGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.6), 0 0 60px rgba(245, 158, 11, 0.2);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
 .animate-slide-in-up {
   animation: slideInUp 0.3s ease-out forwards;
 }
 
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-golden-glow {
+  animation: goldenGlow 2s ease-in-out infinite;
+}
+
+.btn-shimmer {
+  background-size: 200% auto;
+  background-image: linear-gradient(
+    90deg,
+    var(--lucky-red) 0%,
+    var(--lucky-red-light) 25%,
+    var(--gold-mid) 50%,
+    var(--lucky-red-light) 75%,
+    var(--lucky-red) 100%
+  );
+  animation: shimmer 3s linear infinite;
 }
 
 /* Enhanced button hover effects */
@@ -107,7 +169,7 @@ body {
 
 .btn-enhance:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
 }
 
 .btn-enhance:active {

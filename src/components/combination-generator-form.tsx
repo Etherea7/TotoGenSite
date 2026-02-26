@@ -28,11 +28,16 @@ export function CombinationGeneratorForm({
   const [strategyOptions, setStrategyOptions] = useState<StrategyOptions>({
     avoidRange: [1, 12],
   })
-  const [results, setResults] = useState<number[][]>([])
+  const [currentResults, setCurrentResults] = useState<number[][]>([])
   const [error, setError] = useState<string | null>(null)
   const [isAnimating, setIsAnimating] = useState(false)
   const [animationComplete, setAnimationComplete] = useState(false)
   const [savedToast, setSavedToast] = useState(false)
+
+  // Accumulated session history — persists across multiple generations
+  const [sessionHistory, setSessionHistory] = useState<
+    { combos: number[][]; strategy: string; timestamp: Date }[]
+  >([])
 
   const strategyInfo = getStrategyInfo(strategy)
 
@@ -48,6 +53,11 @@ export function CombinationGeneratorForm({
       onSaveHistory(combos, strategyInfo.name)
       setSavedToast(true)
     }
+    // Also add to session history for inline display
+    setSessionHistory(prev => [
+      { combos, strategy: strategyInfo.name, timestamp: new Date() },
+      ...prev,
+    ])
   }, [onSaveHistory, strategyInfo.name])
 
   const handleGenerate = async () => {
@@ -55,11 +65,11 @@ export function CombinationGeneratorForm({
       setError(null)
       setAnimationComplete(false)
       const combinations = await onGenerate(count, strategy, strategyOptions)
-      setResults(combinations)
+      setCurrentResults(combinations)
       setIsAnimating(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate combinations')
-      setResults([])
+      setCurrentResults([])
       setIsAnimating(false)
     }
   }
@@ -67,14 +77,14 @@ export function CombinationGeneratorForm({
   const handleAnimationComplete = useCallback(() => {
     setIsAnimating(false)
     setAnimationComplete(true)
-    saveToHistory(results)
-  }, [results, saveToHistory])
+    saveToHistory(currentResults)
+  }, [currentResults, saveToHistory])
 
   const handleAnimationSkip = useCallback(() => {
     setIsAnimating(false)
     setAnimationComplete(true)
-    saveToHistory(results)
-  }, [results, saveToHistory])
+    saveToHistory(currentResults)
+  }, [currentResults, saveToHistory])
 
   const handleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Math.max(1, Math.min(parseInt(e.target.value) || 1, TOTO_CONSTANTS.MAX_COMBINATIONS_PER_REQUEST))
@@ -112,7 +122,7 @@ export function CombinationGeneratorForm({
         <Button
           onClick={handleGenerate}
           disabled={isLoading || isAnimating}
-          className="flex-1 btn-shimmer text-white font-bold text-base h-10 btn-enhance"
+          className="flex-1 bg-gradient-to-r from-lucky-red to-lucky-red-dark hover:from-lucky-red-light hover:to-lucky-red text-white font-bold text-base h-10 btn-enhance"
           size="lg"
         >
           {isLoading ? (
@@ -136,12 +146,12 @@ export function CombinationGeneratorForm({
         </div>
       )}
 
-      {/* Animation / Results */}
-      {results.length > 0 && (
+      {/* Animation / Current Results */}
+      {currentResults.length > 0 && (
         <div>
           {isAnimating && (
             <AnimatedDraw
-              combinations={results}
+              combinations={currentResults}
               isActive={isAnimating}
               onComplete={handleAnimationComplete}
               onSkip={handleAnimationSkip}
@@ -150,7 +160,7 @@ export function CombinationGeneratorForm({
 
           {animationComplete && !isAnimating && (
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {results.map((combination, index) => (
+              {currentResults.map((combination, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
@@ -187,6 +197,48 @@ export function CombinationGeneratorForm({
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+      )}
+
+      {/* Accumulated session history */}
+      {sessionHistory.length > 0 && (
+        <div className="border-t border-gold-mid/20 pt-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+              <History className="w-4 h-4" />
+              Generated this session ({sessionHistory.reduce((sum, s) => sum + s.combos.length, 0)} combos)
+            </h3>
+            <button
+              onClick={() => setSessionHistory([])}
+              className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+          <div className="space-y-4 max-h-[500px] overflow-y-auto">
+            {sessionHistory.map((entry, entryIdx) => (
+              <div key={entryIdx} className="space-y-1.5">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="font-medium text-gold-dark dark:text-gold-mid">{entry.strategy}</span>
+                  <span>&middot;</span>
+                  <span>
+                    {entry.timestamp.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                  <span>&middot;</span>
+                  <span>{entry.combos.length} combo{entry.combos.length !== 1 ? 's' : ''}</span>
+                </div>
+                {entry.combos.map((combo, comboIdx) => (
+                  <div
+                    key={comboIdx}
+                    className="flex items-center justify-between p-2 bg-muted/20 rounded-md"
+                  >
+                    <span className="text-xs text-muted-foreground/60">#{comboIdx + 1}</span>
+                    <LotteryNumbers numbers={combo} size="sm" />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

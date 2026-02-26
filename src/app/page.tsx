@@ -152,7 +152,7 @@ export default function Home() {
           </div>
 
           {/* Generator Form - Hero */}
-          <Card className="p-6 md:p-8 border-gold-mid/30 animate-golden-glow">
+          <Card className="p-6 md:p-8 border-gold-mid/30">
             <CombinationGeneratorForm
               onGenerate={handleGenerate}
               isLoading={isGenerating}

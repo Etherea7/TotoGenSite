@@ -51,21 +51,6 @@ function FloatingBall({ num, index }: { num: number; index: number }) {
   )
 }
 
-// Ejection flash inside the machine when a ball is revealed
-function EjectionFlash({ trigger }: { trigger: number }) {
-  if (trigger === 0) return null
-  return (
-    <motion.div
-      key={trigger}
-      className="absolute inset-0 rounded-full pointer-events-none z-10"
-      style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.7) 0%, transparent 70%)' }}
-      initial={{ scale: 0.3, opacity: 0.8 }}
-      animate={{ scale: 2.5, opacity: 0 }}
-      transition={{ duration: 0.35, ease: 'easeOut' }}
-    />
-  )
-}
-
 // Revealed ball that flies up from machine to slot
 function RevealedBall({
   number,
@@ -193,9 +178,6 @@ export function DrawMachine({
               : {}
         }
       >
-        {/* Ejection flash */}
-        {!isRapidRevealing && <EjectionFlash trigger={revealedCount} />}
-
         {/* Inner glow */}
         <div className="absolute inset-2 rounded-full bg-gradient-to-br from-white/60 to-transparent dark:from-lucky-red-dark/20" />
 

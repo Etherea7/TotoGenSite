@@ -8,25 +8,120 @@ import { formatNumber } from '@/lib/utils'
 import { Calculator, Star, ChevronDown, ChevronRight, Info } from 'lucide-react'
 import { TOTO_CONSTANTS } from '@/types/lottery'
 
+interface OptionCard {
+  label: string
+  systemEntry?: { type: string; cost: number; combinations: number }
+  ordinaryTickets: number
+  totalCombos: number
+  rationale: string
+  isRecommended?: boolean
+}
+
 export function SystemEntryCalculator() {
   const [budget, setBudget] = useState(50)
   const [showExplanation, setShowExplanation] = useState(false)
 
   const affordableEntries = SYSTEM_ENTRIES.filter(e => e.cost <= budget)
-
-  // Best Fit: highest affordable system entry (most combinations within budget)
-  const bestFit = affordableEntries.length > 0
-    ? affordableEntries.reduce((best, entry) =>
-        entry.combinations > best.combinations ? entry : best
-      )
+  const bestEntry = affordableEntries.length > 0
+    ? affordableEntries.reduce((best, e) => e.combinations > best.combinations ? e : best)
     : null
+
+  // Option A: Best system entry + remaining as ordinary tickets
+  const optionA: OptionCard | null = bestEntry ? {
+    label: 'System Entry Focus',
+    systemEntry: bestEntry,
+    ordinaryTickets: budget - bestEntry.cost,
+    totalCombos: bestEntry.combinations + (budget - bestEntry.cost),
+    rationale: 'Maximizes combinations through a single system entry, using any leftover budget on ordinary tickets.',
+  } : null
+
+  // Option B: All ordinary tickets
+  const optionB: OptionCard = {
+    label: 'All Ordinary Tickets',
+    ordinaryTickets: budget,
+    totalCombos: budget,
+    rationale: 'Simple approach with one unique combination per dollar spent.',
+  }
+
+  // Option C: Mixed (recommended) - only show if there are remaining ordinary tickets
+  const showMixed = optionA && optionA.ordinaryTickets > 0
+  const optionC: OptionCard | null = showMixed ? {
+    label: 'Mixed Strategy',
+    systemEntry: optionA.systemEntry,
+    ordinaryTickets: optionA.ordinaryTickets,
+    totalCombos: optionA.totalCombos,
+    rationale: 'Best of both worlds: system entry coverage plus extra ordinary tickets for independent chances.',
+    isRecommended: true,
+  } : null
+
+  const cards: OptionCard[] = []
+  if (optionC) cards.push(optionC)
+  if (optionA) cards.push(optionA)
+  cards.push(optionB)
+
+  function renderBreakdown(option: OptionCard) {
+    const parts: string[] = []
+    if (option.systemEntry) {
+      parts.push(`1x ${option.systemEntry.type} ($${formatNumber(option.systemEntry.cost)})`)
+    }
+    if (option.ordinaryTickets > 0) {
+      parts.push(`${option.ordinaryTickets}x Ordinary ($${formatNumber(option.ordinaryTickets)})`)
+    }
+    if (!option.systemEntry && option.ordinaryTickets === 0) {
+      parts.push('No tickets')
+    }
+    return parts.join(' + ')
+  }
+
+  function renderCard(option: OptionCard, index: number) {
+    const probability = (option.totalCombos / TOTO_CONSTANTS.TOTAL_POSSIBLE_COMBINATIONS * 100).toFixed(4)
+    const borderClass = option.isRecommended
+      ? 'border-gold-mid bg-gold-mid/5'
+      : 'border-gold-mid/30'
+
+    return (
+      <div
+        key={index}
+        className={`rounded-lg border p-4 ${borderClass}`}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          {option.isRecommended && (
+            <Star className="w-4 h-4 text-gold-dark fill-gold-dark flex-shrink-0" />
+          )}
+          <span className="font-medium text-sm">{option.label}</span>
+          {option.isRecommended && (
+            <span className="ml-auto text-xs font-medium px-2 py-0.5 rounded-full bg-gold-mid/20 text-gold-dark dark:text-gold-mid">
+              Recommended
+            </span>
+          )}
+        </div>
+
+        <p className="text-sm text-muted-foreground mb-2">
+          {renderBreakdown(option)}
+        </p>
+
+        <div className="flex items-baseline gap-1 mb-1">
+          <span className="text-lg font-bold">{formatNumber(option.totalCombos)}</span>
+          <span className="text-xs text-muted-foreground">total combinations</span>
+        </div>
+
+        <p className="text-xs text-muted-foreground mb-2">
+          Win probability: {probability}%
+        </p>
+
+        <p className="text-xs text-muted-foreground/70 italic">
+          {option.rationale}
+        </p>
+      </div>
+    )
+  }
 
   return (
     <Card className="border-gold-mid/30">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg text-gold-dark dark:text-gold-mid">
           <Calculator className="w-5 h-5" />
-          System Entry Calculator
+          Budget Optimizer
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -46,63 +141,15 @@ export function SystemEntryCalculator() {
             />
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gold-mid/20 text-left">
-                  <th className="py-2 pr-3 font-medium">Type</th>
-                  <th className="py-2 pr-3 font-medium text-center">Numbers</th>
-                  <th className="py-2 pr-3 font-medium text-right">Combos</th>
-                  <th className="py-2 pr-3 font-medium text-right">Cost</th>
-                  <th className="py-2 font-medium text-right">Odds Boost</th>
-                </tr>
-              </thead>
-              <tbody>
-                {SYSTEM_ENTRIES.map((entry) => {
-                  const canAfford = entry.cost <= budget
-                  const isBest = bestFit?.type === entry.type
-                  const oddsBoost = `${entry.combinations}x`
-                  const baseProbability = entry.combinations / TOTO_CONSTANTS.TOTAL_POSSIBLE_COMBINATIONS
-
-                  return (
-                    <tr
-                      key={entry.type}
-                      className={
-                        !canAfford
-                          ? 'text-muted-foreground/50'
-                          : isBest
-                            ? 'bg-gold-mid/10 font-medium'
-                            : ''
-                      }
-                    >
-                      <td className="py-2 pr-3 flex items-center gap-1">
-                        {isBest && <Star className="w-3.5 h-3.5 text-gold-dark fill-gold-dark" />}
-                        {entry.type}
-                      </td>
-                      <td className="py-2 pr-3 text-center">{entry.numbersSelected}</td>
-                      <td className="py-2 pr-3 text-right">{formatNumber(entry.combinations)}</td>
-                      <td className="py-2 pr-3 text-right">${formatNumber(entry.cost)}</td>
-                      <td className="py-2 text-right">
-                        {oddsBoost}
-                        <span className="text-xs text-muted-foreground ml-1">
-                          ({(baseProbability * 100).toFixed(4)}%)
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {bestFit && (
-            <div className="p-3 bg-gold-mid/10 border border-gold-mid/30 rounded-md">
-              <p className="text-sm text-gold-dark dark:text-gold-mid">
-                <Star className="w-3.5 h-3.5 inline fill-gold-dark text-gold-dark mr-1" />
-                <strong>Best Fit:</strong> {bestFit.type} ({bestFit.combinations} combinations for ${formatNumber(bestFit.cost)})
-              </p>
-            </div>
+          {budget < 7 && (
+            <p className="text-xs text-muted-foreground">
+              System entries start at $7. With this budget, only ordinary tickets are available.
+            </p>
           )}
+
+          <div className="space-y-3">
+            {cards.map((card, i) => renderCard(card, i))}
+          </div>
 
           {/* Collapsible explanation */}
           <button
@@ -117,6 +164,9 @@ export function SystemEntryCalculator() {
           {showExplanation && (
             <div className="p-4 bg-muted/50 rounded-lg text-sm space-y-2 border border-gold-mid/20">
               <p>
+                An <strong>Ordinary Ticket</strong> costs $1 and gives you 1 combination of 6 numbers.
+              </p>
+              <p>
                 A <strong>System Entry</strong> lets you select more than 6 numbers on a single ticket.
                 The system generates all possible 6-number combinations from your selection.
               </p>
@@ -124,11 +174,11 @@ export function SystemEntryCalculator() {
                 The number of combinations is calculated using the formula <code className="text-xs bg-muted px-1 py-0.5 rounded">C(n,6) = n! / (6! x (n-6)!)</code> where <em>n</em> is the numbers you select.
               </p>
               <p>
-                For example, System 7 (7 numbers) gives C(7,6) = 7 combinations, while System 12 (12 numbers) gives C(12,6) = 924 combinations.
+                For example, System 7 (7 numbers) gives C(7,6) = 7 combinations for $7, while System 12 (12 numbers) gives C(12,6) = 924 combinations for $924.
                 More numbers means <strong>exponentially</strong> more combinations and higher odds.
               </p>
               <p className="text-muted-foreground">
-                The <Star className="w-3 h-3 inline fill-gold-dark text-gold-dark" /> <strong>Best Fit</strong> shows the highest system entry you can afford within your budget.
+                The Budget Optimizer recommends how to split your budget between system entries and ordinary tickets for maximum coverage.
               </p>
             </div>
           )}

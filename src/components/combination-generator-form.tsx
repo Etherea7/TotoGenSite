@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { LotteryNumbers } from "@/components/lottery-numbers"
 import { StrategySelector } from "@/components/strategy-selector"
 import { AnimatedDraw } from "@/components/animated-draw"
 import { SoundToggle } from "@/components/sound-toggle"
-import { Loader2, Shuffle } from "lucide-react"
+import { Loader2, Shuffle, History } from "lucide-react"
 import { TOTO_CONSTANTS, GenerationStrategy, StrategyOptions } from "@/types/lottery"
 import { getStrategyInfo } from "@/lib/strategy-metadata"
 
@@ -31,12 +32,21 @@ export function CombinationGeneratorForm({
   const [error, setError] = useState<string | null>(null)
   const [isAnimating, setIsAnimating] = useState(false)
   const [animationComplete, setAnimationComplete] = useState(false)
+  const [savedToast, setSavedToast] = useState(false)
 
   const strategyInfo = getStrategyInfo(strategy)
+
+  // Auto-dismiss saved toast after 3s
+  useEffect(() => {
+    if (!savedToast) return
+    const t = setTimeout(() => setSavedToast(false), 3000)
+    return () => clearTimeout(t)
+  }, [savedToast])
 
   const saveToHistory = useCallback((combos: number[][]) => {
     if (onSaveHistory && combos.length > 0) {
       onSaveHistory(combos, strategyInfo.name)
+      setSavedToast(true)
     }
   }, [onSaveHistory, strategyInfo.name])
 
@@ -162,6 +172,21 @@ export function CombinationGeneratorForm({
               </p>
             </div>
           )}
+
+          {/* Saved to history toast */}
+          <AnimatePresence>
+            {savedToast && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="flex items-center gap-1.5 text-xs text-gold-dark dark:text-gold-mid justify-center mt-2"
+              >
+                <History className="w-3.5 h-3.5" />
+                Saved to history
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
     </div>

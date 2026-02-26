@@ -16,14 +16,16 @@ export function Navbar({ onSettingsClick }: NavbarProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-gold-mid/30 bg-gradient-to-r from-gold-dark/10 via-gold-mid/5 to-gold-dark/10 backdrop-blur-md">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-14">
+        <div className="grid grid-cols-3 items-center h-14">
           {/* Logo */}
-          <Link href="/" className="font-bold text-xl bg-gradient-to-r from-gold-dark via-lucky-red to-gold-dark bg-clip-text text-transparent">
-            TOTO Generator
-          </Link>
+          <div className="flex items-center">
+            <Link href="/" className="font-bold text-xl bg-gradient-to-r from-gold-dark via-lucky-red to-gold-dark bg-clip-text text-transparent">
+              TOTO Generator
+            </Link>
+          </div>
 
-          {/* Navigation Links */}
-          <nav className="flex items-center gap-6">
+          {/* Navigation Links — true center */}
+          <nav className="flex items-center justify-center gap-6">
             <Link
               href="/"
               className={cn(
@@ -49,14 +51,16 @@ export function Navbar({ onSettingsClick }: NavbarProps) {
           </nav>
 
           {/* Settings */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 text-muted-foreground hover:text-gold-dark dark:hover:text-gold-mid"
-            onClick={onSettingsClick}
-          >
-            <Settings className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center justify-end">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-muted-foreground hover:text-gold-dark dark:hover:text-gold-mid"
+              onClick={onSettingsClick}
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </div>
     </header>

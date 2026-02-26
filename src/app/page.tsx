@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { motion, useSpring, useTransform, useMotionValue } from 'motion/react'
 import { CombinationGeneratorForm } from '@/components/combination-generator-form'
 import { CombinationChecker } from '@/components/combination-checker'
 import { StatsCard } from '@/components/stats-card'
@@ -9,7 +10,8 @@ import { Navbar } from '@/components/navbar'
 import { SettingsDialog } from '@/components/settings-dialog'
 import { CombinationHistoryPanel } from '@/components/combination-history-panel'
 import { useCombinationHistory } from '@/hooks/useCombinationHistory'
-import { StatsResponse, GenerationStrategy, StrategyOptions } from '@/types/lottery'
+import { StatsResponse, GenerationStrategy, StrategyOptions, TOTO_CONSTANTS } from '@/types/lottery'
+import { formatNumber } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 
 export default function Home() {
@@ -21,6 +23,21 @@ export default function Home() {
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   const { history, isLoading: historyLoading, addRecord, deleteRecord, clearAll } = useCombinationHistory()
+
+  const remaining = useMemo(
+    () => (stats ? TOTO_CONSTANTS.TOTAL_POSSIBLE_COMBINATIONS - stats.uniqueCombinations : null),
+    [stats],
+  )
+
+  const motionValue = useMotionValue(0)
+  const springValue = useSpring(motionValue, { stiffness: 50, damping: 20 })
+  const displayValue = useTransform(springValue, (v) => formatNumber(Math.round(v)))
+
+  useEffect(() => {
+    if (remaining !== null) {
+      motionValue.set(remaining)
+    }
+  }, [remaining, motionValue])
 
   useEffect(() => {
     loadStats()
@@ -105,13 +122,33 @@ export default function Home() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto space-y-8">
           {/* Hero title */}
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gold-dark via-lucky-red to-gold-dark bg-clip-text text-transparent mb-2">
-              Lucky Number
-            </h1> 
-            <p className="text-muted-foreground">
-              Good Luck
+          <div className="text-center py-4">
+            <p className="uppercase tracking-widest text-xs font-semibold text-gold-dark mb-3">
+              Singapore Toto Generator
             </p>
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gold-dark via-lucky-red to-gold-dark bg-clip-text text-transparent mb-3">
+              {remaining !== null ? (
+                <>
+                  <motion.span>{displayValue}</motion.span> combinations remain.
+                </>
+              ) : (
+                <span className="inline-block h-[1.2em] w-64 md:w-96 bg-muted/40 rounded-lg animate-pulse align-middle" />
+              )}
+            </h1>
+            <p className="text-muted-foreground mb-4">
+              Every number has its day. We just find the ones that haven&apos;t had theirs yet.
+            </p>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <span className="px-3 py-1 rounded-full text-xs font-medium border border-gold-dark/40 text-gold-dark">
+                Numbers 1&ndash;49
+              </span>
+              <span className="px-3 py-1 rounded-full text-xs font-medium border border-lucky-red/40 text-lucky-red">
+                Pick 6
+              </span>
+              <span className="px-3 py-1 rounded-full text-xs font-medium border border-gold-dark/40 text-gold-dark">
+                Never drawn before
+              </span>
+            </div>
           </div>
 
           {/* Generator Form - Hero */}

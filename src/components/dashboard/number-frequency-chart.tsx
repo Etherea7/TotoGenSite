@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   BarChart,
   Bar,
@@ -19,14 +19,63 @@ import { ArrowUpIcon, ArrowDownIcon, SearchIcon, CalendarIcon } from 'lucide-rea
 import type { NumberFrequency, NumberFrequencyResponse } from '@/app/api/number-frequency/route'
 import { format } from 'date-fns'
 
-interface ChartData extends NumberFrequency {
-  isHighlighted?: boolean
-}
+interface ChartData extends NumberFrequency {}
 
 interface DateRange {
   from?: Date
   to?: Date
 }
+
+interface FrequencyTooltipProps {
+  active?: boolean
+  payload?: Array<{
+    value: number
+    payload: ChartData
+  }>
+  label?: number
+  includeAdditional: boolean
+  totalDraws: number
+}
+
+const BAR_WIDTH = 52
+const MIN_CHART_WIDTH = 720
+
+const FrequencyTooltip = memo(function FrequencyTooltip({
+  active,
+  payload,
+  label,
+  includeAdditional,
+  totalDraws,
+}: FrequencyTooltipProps) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload
+    const percentage = totalDraws > 0 ? ((payload[0].value / totalDraws) * 100).toFixed(2) : '0.00'
+
+    return (
+      <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
+        <p className="font-semibold text-gray-900">Number: {label}</p>
+        <p className="text-amber-600 font-medium">
+          Total Appearances: {payload[0].value}
+        </p>
+        {includeAdditional && (
+          <>
+            <p className="text-sm text-gray-600">
+              Winning Numbers: {data.winningCount}
+            </p>
+            <p className="text-sm text-gray-600">
+              Additional Numbers: {data.additionalCount || 0}
+            </p>
+          </>
+        )}
+        <p className="text-sm text-gray-600">
+          Frequency: {percentage}%
+        </p>
+      </div>
+    )
+  }
+
+  return null
+})
 
 export function NumberFrequencyChart() {
   const [data, setData] = useState<ChartData[]>([])
@@ -39,28 +88,28 @@ export function NumberFrequencyChart() {
   const [totalDraws, setTotalDraws] = useState(0)
   const [dateRange, setDateRange] = useState<DateRange>({})
 
-  const chartRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const startDate = dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined
+  const endDate = dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined
 
-  useEffect(() => {
-    fetchData()
-  }, [includeAdditional, dateRange])
+  const chartData = useMemo(() => {
+    return [...data]
+      .sort((a, b) => sortOrder === 'asc'
+        ? a.frequency - b.frequency
+        : b.frequency - a.frequency
+      )
+      .map(item => ({
+        ...item,
+        isHighlighted: item.number === highlightedNumber,
+      }))
+  }, [data, highlightedNumber, sortOrder])
 
-  useEffect(() => {
-    // Sort data when sortOrder changes
-    if (data.length > 0) {
-      const sortedData = [...data].sort((a, b) => {
-        if (sortOrder === 'asc') {
-          return a.frequency - b.frequency
-        } else {
-          return b.frequency - a.frequency
-        }
-      })
-      setData(sortedData)
-    }
-  }, [sortOrder])
+  const chartWidth = useMemo(
+    () => Math.max(MIN_CHART_WIDTH, chartData.length * BAR_WIDTH),
+    [chartData.length]
+  )
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -70,11 +119,11 @@ export function NumberFrequencyChart() {
         includeAdditional: includeAdditional.toString()
       })
 
-      if (dateRange.from) {
-        params.append('startDate', format(dateRange.from, 'yyyy-MM-dd'))
+      if (startDate) {
+        params.append('startDate', startDate)
       }
-      if (dateRange.to) {
-        params.append('endDate', format(dateRange.to, 'yyyy-MM-dd'))
+      if (endDate) {
+        params.append('endDate', endDate)
       }
 
       const response = await fetch(`/api/number-frequency?${params.toString()}`)
@@ -85,9 +134,7 @@ export function NumberFrequencyChart() {
       }
 
       if (result.success) {
-        // Sort data by frequency (descending by default)
-        const sortedData = result.data.sort((a, b) => b.frequency - a.frequency)
-        setData(sortedData)
+        setData(result.data)
         setTotalDraws(result.totalDraws)
       } else {
         setError(result.error || 'Failed to load data')
@@ -98,9 +145,13 @@ export function NumberFrequencyChart() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [endDate, includeAdditional, startDate])
 
-  const handleSearch = () => {
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  const handleSearch = useCallback(() => {
     const number = parseInt(searchNumber)
     if (isNaN(number) || number < 1 || number > 49) {
       alert('Please enter a valid number between 1 and 49')
@@ -109,15 +160,8 @@ export function NumberFrequencyChart() {
 
     setHighlightedNumber(number)
 
-    // Update chart data with highlighting
-    const updatedData = data.map(item => ({
-      ...item,
-      isHighlighted: item.number === number
-    }))
-    setData(updatedData)
-
     // Find the index of the number in the sorted data
-    const targetIndex = updatedData.findIndex(item => item.number === number)
+    const targetIndex = chartData.findIndex(item => item.number === number)
 
     if (targetIndex !== -1 && scrollContainerRef.current) {
       // Calculate approximate position (each bar is about 60px wide with padding)
@@ -133,61 +177,28 @@ export function NumberFrequencyChart() {
         behavior: 'smooth'
       })
     }
-  }
+  }, [chartData, searchNumber])
 
-  const clearHighlight = () => {
+  const clearHighlight = useCallback(() => {
     setHighlightedNumber(null)
     setSearchNumber('')
-    const updatedData = data.map(item => ({
-      ...item,
-      isHighlighted: false
-    }))
-    setData(updatedData)
-  }
+  }, [])
 
-  const toggleSortOrder = () => {
+  const toggleSortOrder = useCallback(() => {
     setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')
-  }
+  }, [])
 
-  const toggleIncludeAdditional = () => {
+  const toggleIncludeAdditional = useCallback(() => {
     setIncludeAdditional(prev => !prev)
-  }
+  }, [])
 
-  const handleDateRangeChange = (range: DateRange) => {
+  const handleDateRangeChange = useCallback((range: DateRange) => {
     setDateRange(range)
-  }
+  }, [])
 
-  const clearDateRange = () => {
+  const clearDateRange = useCallback(() => {
     setDateRange({})
-  }
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload
-      return (
-        <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
-          <p className="font-semibold text-gray-900">Number: {label}</p>
-          <p className="text-amber-600 font-medium">
-            Total Appearances: {payload[0].value}
-          </p>
-          {includeAdditional && (
-            <>
-              <p className="text-sm text-gray-600">
-                Winning Numbers: {data.winningCount}
-              </p>
-              <p className="text-sm text-gray-600">
-                Additional Numbers: {data.additionalCount || 0}
-              </p>
-            </>
-          )}
-          <p className="text-sm text-gray-600">
-            Frequency: {((payload[0].value / totalDraws) * 100).toFixed(2)}%
-          </p>
-        </div>
-      )
-    }
-    return null
-  }
+  }, [])
 
   if (loading) {
     return (
@@ -300,10 +311,10 @@ export function NumberFrequencyChart() {
         className="overflow-x-auto border rounded-lg bg-white p-4"
         style={{ maxHeight: '500px' }}
       >
-        <div style={{ minWidth: `${data.length * 60}px`, height: '400px' }}>
-          <ResponsiveContainer width="100%" height="100%">
+        <div style={{ width: `${chartWidth}px`, height: '400px' }}>
+          <ResponsiveContainer width="100%" height="100%" debounce={80}>
             <BarChart
-              data={data}
+              data={chartData}
               margin={{
                 top: 20,
                 right: 30,
@@ -323,14 +334,23 @@ export function NumberFrequencyChart() {
                 axisLine={{ stroke: '#e4e4e7' }}
                 tickLine={{ stroke: '#e4e4e7' }}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip
+                animationDuration={120}
+                content={
+                  <FrequencyTooltip
+                    includeAdditional={includeAdditional}
+                    totalDraws={totalDraws}
+                  />
+                }
+              />
               <Bar
                 dataKey="frequency"
                 radius={[4, 4, 0, 0]}
+                isAnimationActive={false}
               >
-                {data.map((entry, index) => (
+                {chartData.map((entry) => (
                   <Cell
-                    key={`cell-${index}`}
+                    key={`cell-${entry.number}`}
                     fill={entry.isHighlighted
                       ? "#DC2626"  // Lucky red for highlighted
                       : "#D97706"  // Gold-dark for normal bars

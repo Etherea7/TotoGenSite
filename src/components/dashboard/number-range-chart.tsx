@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import {
   BarChart,
   Bar,
@@ -54,6 +54,60 @@ const RANGE_COLORS = [
   '#FFD700'  // gold
 ]
 
+interface RangeTooltipProps {
+  active?: boolean
+  payload?: Array<{
+    value: number
+    payload: RangeData
+  }>
+  label?: string
+}
+
+const RangeTooltip = memo(function RangeTooltip({ active, payload, label }: RangeTooltipProps) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload
+    return (
+      <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
+        <p className="font-semibold text-gray-900">Range: {label}</p>
+        <p className="text-amber-600 font-medium">
+          Count: {payload[0].value}
+        </p>
+        <p className="text-sm text-gray-600">
+          Percentage: {data.percentage.toFixed(1)}%
+        </p>
+      </div>
+    )
+  }
+
+  return null
+})
+
+interface PieTooltipProps {
+  active?: boolean
+  payload?: Array<{
+    payload: RangeData
+  }>
+}
+
+const PieTooltip = memo(function PieTooltip({ active, payload }: PieTooltipProps) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload
+    return (
+      <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
+        <p className="font-semibold text-gray-900">Range: {data.range}</p>
+        <p className="text-amber-600 font-medium">
+          Count: {data.count}
+        </p>
+        <p className="text-sm text-gray-600">
+          Percentage: {data.percentage.toFixed(1)}%
+        </p>
+      </div>
+    )
+  }
+
+  return null
+})
+
 export function NumberRangeChart() {
   const [data, setData] = useState<RangeData[]>([])
   const [loading, setLoading] = useState(true)
@@ -63,12 +117,10 @@ export function NumberRangeChart() {
   const [totalNumbers, setTotalNumbers] = useState(0)
   const [totalDraws, setTotalDraws] = useState(0)
   const [chartType, setChartType] = useState<'bar' | 'pie'>('bar')
+  const startDate = dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined
+  const endDate = dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined
 
-  useEffect(() => {
-    fetchData()
-  }, [includeAdditional, dateRange])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -78,11 +130,11 @@ export function NumberRangeChart() {
         includeAdditional: includeAdditional.toString()
       })
 
-      if (dateRange.from) {
-        params.append('startDate', format(dateRange.from, 'yyyy-MM-dd'))
+      if (startDate) {
+        params.append('startDate', startDate)
       }
-      if (dateRange.to) {
-        params.append('endDate', format(dateRange.to, 'yyyy-MM-dd'))
+      if (endDate) {
+        params.append('endDate', endDate)
       }
 
       const response = await fetch(`/api/number-ranges?${params.toString()}`)
@@ -111,55 +163,25 @@ export function NumberRangeChart() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [endDate, includeAdditional, startDate])
 
-  const toggleIncludeAdditional = () => {
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  const chartData = useMemo(() => data, [data])
+
+  const toggleIncludeAdditional = useCallback(() => {
     setIncludeAdditional(prev => !prev)
-  }
+  }, [])
 
-  const handleDateRangeChange = (range: DateRange) => {
+  const handleDateRangeChange = useCallback((range: DateRange) => {
     setDateRange(range)
-  }
+  }, [])
 
-  const clearDateRange = () => {
+  const clearDateRange = useCallback(() => {
     setDateRange({})
-  }
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload
-      return (
-        <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
-          <p className="font-semibold text-gray-900">Range: {label}</p>
-          <p className="text-amber-600 font-medium">
-            Count: {payload[0].value}
-          </p>
-          <p className="text-sm text-gray-600">
-            Percentage: {data.percentage.toFixed(1)}%
-          </p>
-        </div>
-      )
-    }
-    return null
-  }
-
-  const CustomPieTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload
-      return (
-        <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
-          <p className="font-semibold text-gray-900">Range: {data.range}</p>
-          <p className="text-amber-600 font-medium">
-            Count: {data.count}
-          </p>
-          <p className="text-sm text-gray-600">
-            Percentage: {data.percentage.toFixed(1)}%
-          </p>
-        </div>
-      )
-    }
-    return null
-  }
+  }, [])
 
   if (loading) {
     return (
@@ -267,10 +289,10 @@ export function NumberRangeChart() {
 
           {/* Chart */}
           <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" debounce={80}>
               {chartType === 'bar' ? (
                 <BarChart
-                  data={data}
+                  data={chartData}
                   margin={{
                     top: 20,
                     right: 30,
@@ -290,20 +312,21 @@ export function NumberRangeChart() {
                     axisLine={{ stroke: '#e4e4e7' }}
                     tickLine={{ stroke: '#e4e4e7' }}
                   />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip animationDuration={120} content={<RangeTooltip />} />
                   <Bar
                     dataKey="count"
                     radius={[4, 4, 0, 0]}
+                    isAnimationActive={false}
                   >
-                    {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    {chartData.map((entry) => (
+                      <Cell key={`cell-${entry.range}`} fill={entry.color} />
                     ))}
                   </Bar>
                 </BarChart>
               ) : (
                 <PieChart>
                   <Pie
-                    data={data}
+                    data={chartData}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -312,12 +335,13 @@ export function NumberRangeChart() {
                     fill="#8884d8"
                     dataKey="count"
                     nameKey="range"
+                    isAnimationActive={false}
                   >
-                    {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    {chartData.map((entry) => (
+                      <Cell key={`cell-${entry.range}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomPieTooltip />} />
+                  <Tooltip animationDuration={120} content={<PieTooltip />} />
                   <Legend />
                 </PieChart>
               )}
@@ -326,7 +350,7 @@ export function NumberRangeChart() {
 
           {/* Summary Statistics */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-4 border-t">
-            {data.map((range, index) => (
+            {chartData.map((range) => (
               <div key={range.range} className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-2xl font-bold" style={{ color: range.color }}>
                   {range.count}

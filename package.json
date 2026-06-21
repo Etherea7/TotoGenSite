@@ -9,7 +9,9 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "import-csv": "tsx scripts/import-csv.ts"
+    "import-csv": "tsx scripts/import-csv.ts",
+    "scrape-all": "tsx scripts/scrape-all.ts --write",
+    "scrape-all:dry-run": "tsx scripts/scrape-all.ts --dry-run --max-pages 1"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

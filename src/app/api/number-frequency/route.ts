@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseKey)
+import { lotteryDb } from '@/lib/convex'
 
 export interface NumberFrequency {
   number: number 
@@ -25,16 +21,6 @@ export interface NumberFrequencyResponse {
   error?: string
 }
 
-interface DrawData {
-  'Winning Number 1': number | null
-  '2': number | null
-  '3': number | null
-  '4': number | null
-  '5': number | null
-  '6': number | null
-  'Additional Number'?: number | null
-}
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -42,40 +28,10 @@ export async function GET(request: Request) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
-    // Build query with optional date filtering
-    let query = supabase
-      .from('lottery_draws')
-      .select(`
-        "Winning Number 1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "Date"
-        ${includeAdditional ? ', "Additional Number"' : ''}
-      `)
-
-    // Apply date filters if provided
-    if (startDate) {
-      query = query.gte('Date', startDate)
-    }
-    if (endDate) {
-      query = query.lte('Date', endDate)
-    }
-
-    const { data: draws, error } = await query as { data: (DrawData & { Date: string })[] | null, error: any }
-
-    if (error) {
-      console.error('Database error:', error)
-      return NextResponse.json({
-        success: false,
-        data: [],
-        includeAdditional,
-        totalDraws: 0,
-        error: 'Failed to fetch lottery data'
-      }, { status: 500 })
-    }
+    const draws = await lotteryDb.getDrawsForAnalysis({
+      ...(startDate && { startDate }),
+      ...(endDate && { endDate }),
+    })
 
     if (!draws || draws.length === 0) {
       return NextResponse.json({
@@ -97,13 +53,8 @@ export async function GET(request: Request) {
     draws.forEach(draw => {
       // Count winning numbers (columns 1-6)
       const winningNumbers = [
-        draw["Winning Number 1"],
-        draw["2"],
-        draw["3"],
-        draw["4"],
-        draw["5"],
-        draw["6"]
-      ].filter((num): num is number => num !== null && num >= 1 && num <= 49)
+        ...draw.numbers
+      ].filter((num): num is number => num >= 1 && num <= 49)
 
       winningNumbers.forEach(num => {
         if (frequencies[num]) {
@@ -112,9 +63,9 @@ export async function GET(request: Request) {
       })
 
       // Count additional number if requested
-      if (includeAdditional && draw["Additional Number"] &&
-          draw["Additional Number"] >= 1 && draw["Additional Number"] <= 49) {
-        const additionalNum = draw["Additional Number"]!
+      if (includeAdditional && draw.additionalNumber &&
+          draw.additionalNumber >= 1 && draw.additionalNumber <= 49) {
+        const additionalNum = draw.additionalNumber
         if (frequencies[additionalNum]) {
           frequencies[additionalNum].additionalCount++
         }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { lotteryDb } from '@/lib/supabase'
+import { lotteryDb } from '@/lib/convex'
 import { HealthResponse } from '@/types/lottery'
 
 export async function GET(_request: NextRequest) {

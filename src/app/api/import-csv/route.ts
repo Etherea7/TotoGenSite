@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { lotteryDb } from '@/lib/supabase'
+import { lotteryDb } from '@/lib/convex'
 import { totoScraper } from '@/lib/scraper'
 
 export async function POST(request: NextRequest) {
@@ -74,14 +74,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Refresh materialized view
-    try {
-      await lotteryDb.refreshCombinationsView()
-      console.log('Materialized view refreshed successfully')
-    } catch (viewError) {
-      console.warn('Failed to refresh materialized view:', viewError)
-      errors.push('Failed to refresh materialized view')
-    }
+    await lotteryDb.refreshCombinationsView()
 
     const response = {
       success: totalInserted > 0,

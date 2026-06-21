@@ -1,107 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { simpleTotoScraper } from '@/lib/simple-scraper'
-import { lotteryDb } from '@/lib/supabase'
-import { ScrapeResponse } from '@/types/lottery'
+import { lotteryDb } from '@/lib/convex'
+import { scrapeAndImportLatestDraws } from '@/lib/scrape-runner'
 
 export async function POST(_request: NextRequest) {
-  const startTime = Date.now()
-
   try {
-    console.log('Starting data scraping process...')
-
-    // Get current latest draw number to avoid duplicates
-    const currentLatestDraw = await lotteryDb.getLatestDrawNumber()
-    console.log(`Current latest draw in DB: ${currentLatestDraw}`)
-
-    // Scrape data from website
-    const scrapingResult = await simpleTotoScraper.scrapeLotteryData()
-
-    if (!scrapingResult.success) {
-      console.error('Scraping failed:', scrapingResult.error)
-
-      const response: ScrapeResponse = {
-        success: false,
-        newRecords: 0,
-        latestDraw: currentLatestDraw,
-        message: scrapingResult.message,
-        processingTime: Date.now() - startTime,
-        error: scrapingResult.error,
-      }
-
-      return NextResponse.json(response, { status: 500 })
-    }
-
-    // Filter out draws that already exist in the database
-    const newDraws = scrapingResult.draws.filter(draw => (draw["Draw"] || 0) > currentLatestDraw)
-    console.log(`Found ${newDraws.length} new draws to insert`)
-
-    let insertedCount = 0
-    let latestDrawNumber = currentLatestDraw
-
-    if (newDraws.length > 0) {
-      try {
-        // Sort by draw number to insert in order
-        newDraws.sort((a, b) => (a["Draw"] || 0) - (b["Draw"] || 0))
-
-        // Insert new draws
-        const insertedDraws = await lotteryDb.insertDraws(newDraws)
-        insertedCount = insertedDraws.length
-        latestDrawNumber = Math.max(...newDraws.map(d => d["Draw"] || 0), currentLatestDraw)
-
-        console.log(`Successfully inserted ${insertedCount} new draws`)
-
-        // Refresh the materialized view for better performance
-        try {
-          await lotteryDb.refreshCombinationsView()
-          console.log('Refreshed combinations view')
-        } catch (viewError) {
-          console.warn('Failed to refresh combinations view:', viewError)
-          // Don't fail the entire operation for this
-        }
-      } catch (insertError) {
-        console.error('Failed to insert draws:', insertError)
-
-        const response: ScrapeResponse = {
-          success: false,
-          newRecords: 0,
-          latestDraw: currentLatestDraw,
-          message: 'Failed to insert new draws into database',
-          processingTime: Date.now() - startTime,
-          error: insertError instanceof Error ? insertError.message : 'Database insertion failed',
-        }
-
-        return NextResponse.json(response, { status: 500 })
-      }
-    }
-
-    const processingTime = Date.now() - startTime
-    let message = `Scraping completed successfully. `
-
-    if (insertedCount > 0) {
-      message += `Added ${insertedCount} new draws to database.`
-    } else {
-      message += `No new draws found. Database is up to date.`
-    }
-
-    const response: ScrapeResponse = {
-      success: true,
-      newRecords: insertedCount,
-      latestDraw: latestDrawNumber,
-      message,
-      processingTime,
-    }
-
-    return NextResponse.json(response)
+    const response = await scrapeAndImportLatestDraws()
+    return NextResponse.json(response, { status: response.success ? 200 : 500 })
 
   } catch (error) {
     console.error('Scrape API error:', error)
 
-    const response: ScrapeResponse = {
+    const response = {
       success: false,
       newRecords: 0,
       latestDraw: 0,
       message: 'Scraping failed due to an unexpected error',
-      processingTime: Date.now() - startTime,
+      processingTime: 0,
       error: error instanceof Error ? error.message : 'Unknown error',
     }
 

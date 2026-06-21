@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { isValidCombination, createCombinationKey } from '@/lib/utils'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { lotteryDb } from '@/lib/convex'
 
 export interface CheckCombinationRequest {
   numbers: number[]
@@ -47,30 +42,7 @@ export async function POST(request: NextRequest) {
     const sortedNumbers = [...numbers].sort((a, b) => a - b)
     const sortedKey = createCombinationKey(numbers)
 
-    // Check if this exact combination exists in historical data
-    const { data: existingDraw, error: queryError } = await supabase
-      .from('lottery_draws')
-      .select('*')
-      .or(
-        `and("Winning Number 1".eq.${sortedNumbers[0]},"2".eq.${sortedNumbers[1]},"3".eq.${sortedNumbers[2]},"4".eq.${sortedNumbers[3]},"5".eq.${sortedNumbers[4]},"6".eq.${sortedNumbers[5]})`
-      )
-      .limit(1)
-      .single()
-
-    if (queryError && queryError.code !== 'PGRST116') {
-      console.error('Database query error:', queryError)
-      return NextResponse.json(
-        {
-          success: false,
-          exists: false,
-          combination: numbers,
-          sortedKey,
-          error: 'Database query failed',
-        } as CheckCombinationResponse,
-        { status: 500 }
-      )
-    }
-
+    const existingDraw = await lotteryDb.checkCombination(sortedNumbers)
     const exists = !!existingDraw
     const response: CheckCombinationResponse = {
       success: true,
@@ -81,8 +53,8 @@ export async function POST(request: NextRequest) {
 
     if (exists) {
       response.matchedDraw = {
-        drawNumber: existingDraw.Draw,
-        date: existingDraw.Date,
+        drawNumber: existingDraw.drawNumber,
+        date: existingDraw.date,
         isWinning: true,
         isAdditional: false,
       }

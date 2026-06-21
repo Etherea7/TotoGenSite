@@ -1,4 +1,4 @@
-import { lotteryDb } from './supabase'
+import { lotteryDb } from './convex'
 import { createCombinationKey, sleep } from './utils'
 import {
   TOTO_CONSTANTS,

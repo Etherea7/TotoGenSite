@@ -228,6 +228,7 @@ export function AnimatedDraw({
             revealedCount={revealedCount}
             isSpinning={state === 'SPINNING'}
             isCelebrating={state === 'CELEBRATING'}
+            isRapidRevealing={state === 'RAPID_REVEALING'}
           />
 
           <div className="mt-4 text-sm text-muted-foreground">

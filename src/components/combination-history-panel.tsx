@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { motion } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -107,12 +108,22 @@ export function CombinationHistoryPanel({
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <button className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-gradient-to-l from-gold-dark to-gold-mid text-white px-2 py-4 rounded-l-lg shadow-lg hover:pr-3 transition-all duration-200 flex flex-col items-center gap-1">
+        <button
+          className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-gradient-to-l from-gold-dark to-gold-mid text-white px-3 py-5 rounded-l-xl shadow-lg hover:px-4 transition-all duration-200 flex flex-col items-center gap-1.5"
+          aria-label="View generation history"
+        >
           <History className="w-5 h-5" />
+          <span className="text-[10px] font-medium leading-none">History</span>
           {totalCount > 0 && (
-            <span className="text-xs font-bold bg-lucky-red rounded-full w-5 h-5 flex items-center justify-center">
+            <motion.span
+              key={totalCount}
+              initial={{ scale: 1.4 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+              className="text-xs font-bold bg-lucky-red rounded-full w-5 h-5 flex items-center justify-center"
+            >
               {totalCount > 99 ? '99+' : totalCount}
-            </span>
+            </motion.span>
           )}
         </button>
       </SheetTrigger>

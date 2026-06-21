@@ -9,6 +9,7 @@ interface DrawMachineProps {
   revealedCount: number
   isSpinning: boolean
   isCelebrating: boolean
+  isRapidRevealing?: boolean
 }
 
 // Floating ball inside the machine
@@ -54,9 +55,11 @@ function FloatingBall({ num, index }: { num: number; index: number }) {
 function RevealedBall({
   number,
   isCelebrating,
+  isRapid,
 }: {
   number: number
   isCelebrating: boolean
+  isRapid: boolean
 }) {
   return (
     <motion.div
@@ -64,23 +67,27 @@ function RevealedBall({
         'w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-lg',
         'bg-gradient-to-br from-lucky-red to-lucky-red-dark',
       )}
-      initial={{ scale: 0.3, y: 80, opacity: 0 }}
+      initial={{ scale: 0.25, y: 160, opacity: 0 }}
       animate={{
         scale: isCelebrating ? [1, 1.15, 1] : 1,
         y: 0,
         opacity: 1,
         rotate: isCelebrating ? [0, -5, 5, 0] : 0,
       }}
-      transition={{
-        type: 'spring',
-        stiffness: 300,
-        damping: 20,
-        delay: 0.05,
-        ...(isCelebrating && {
-          rotate: { duration: 0.4, repeat: 2 },
-          scale: { duration: 0.4, repeat: 2 },
-        }),
-      }}
+      transition={
+        isRapid
+          ? { duration: 0.07, ease: 'easeOut' }
+          : {
+              type: 'spring',
+              stiffness: 350,
+              damping: 16,
+              delay: 0.05,
+              ...(isCelebrating && {
+                rotate: { duration: 0.4, repeat: 2 },
+                scale: { duration: 0.4, repeat: 2 },
+              }),
+            }
+      }
     >
       <motion.div
         className="absolute inset-0 rounded-full bg-gold-mid/50"
@@ -98,6 +105,7 @@ export function DrawMachine({
   revealedCount,
   isSpinning,
   isCelebrating,
+  isRapidRevealing = false,
 }: DrawMachineProps) {
   const sortedNumbers = useRef([...numbers].sort((a, b) => a - b))
 
@@ -109,9 +117,9 @@ export function DrawMachine({
   const floatingNums = Array.from({ length: 8 }, (_, i) => ((i * 7 + 3) % 49) + 1)
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center gap-2">
       {/* Revealed slots */}
-      <div className="flex gap-3 justify-center">
+      <div className="flex gap-3 justify-center overflow-visible">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
@@ -123,6 +131,7 @@ export function DrawMachine({
                   key={`revealed-${sortedNumbers.current[i]}`}
                   number={sortedNumbers.current[i]}
                   isCelebrating={isCelebrating}
+                  isRapid={isRapidRevealing}
                 />
               ) : (
                 <motion.div
@@ -136,6 +145,11 @@ export function DrawMachine({
           </div>
         ))}
       </div>
+
+      {/* Chute - between slots and machine */}
+      {!isRapidRevealing && (isSpinning || revealedCount < 6) && (
+        <div className="w-1 h-6 rounded-full bg-gradient-to-b from-gold-mid/60 to-transparent mx-auto" />
+      )}
 
       {/* Machine container */}
       <motion.div
